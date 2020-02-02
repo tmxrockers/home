@@ -1,0 +1,63 @@
+<div class="gs-inbox">
+  <!-- <ng-container *ngIf="isGroupInbox"> -->
+    <!-- <span appInboxGroupList></span> -->
+  <!-- </ng-container> -->
+  <div class="gs-inbox-list" *ngFor="let model of models">
+    <div *ngIf="title" class="gs-inbox-list-title">
+      <label title="{{title}}">{{title}}</label>
+    </div>
+    <!-- This is the container for Inbox Header-->
+    <ng-container *ngIf="isInboxHeaderAvailable">
+      <div class="gs-inbox-list-header">
+        <div class="gs-inbox-list-header-item col-{{column.colSize}} {{column.align}}"
+          *ngFor="let column of model.columns">
+          <span title="{{column.label}}" class="col-text" id="{{column.id}}">
+            {{column.label}}
+          </span>
+        </div>
+      </div>
+    </ng-container>
+    <!-- Header Content END -->
+    <div class="gs-inbox-rows">
+      <div class="gs-inbox-row" *ngFor="let row of model.rows">
+        <!-- This is the container for showing all the row content by using isFormatRowContentAvailable-->
+        <ng-container
+          *ngIf="isFormatRowContentAvailable.length === 0 || (row.rowId !== activeAccordionRowId && row.rowId !== openActiveAccordionByRowId)">
+          <div class="gs-inbox-row-list" id="{{row.rowId}}" (click)="onClickRow(row)">
+            <div class="gs-inbox-row-list-item col-{{column.colSize}} {{column.align}}"
+              *ngFor="let column of model.columns">
+              <span title="{{row.values[0][column.id]}}">{{row.values[0][column.id]}}</span>
+            </div>
+          </div>
+        </ng-container>
+        <!--  END  -->
+
+        <!-- This is the container for hiding the specific row content -->
+        <ng-container
+          *ngIf="isFormatRowContentAvailable.length > 0 && row.rowId === activeAccordionRowId || row.rowId === openActiveAccordionByRowId">
+          <div class="gs-inbox-row-list" id="{{row.rowId}}" (click)="onClickRow(row)">
+            <div class="gs-inbox-row-list-item col-{{column.colSize}} {{column.align}}"
+              *ngFor="let column of isFormatRowContentAvailable">
+              <span title="{{row.values[0][column.id]}}">{{row.values[0][column.id]}}</span>
+            </div>
+          </div>
+        </ng-container>
+        <!--  END  -->
+
+        <div *ngIf="isLoading && row.rowId === activeAccordionRowId">
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </div>
+        <!-- This is the inbox detail content -->
+        <div
+          [class.detail]="(row.rowId === activeAccordionRowId && !isLoading) || row.rowId === openActiveAccordionByRowId">
+          <div *ngIf="(!isLoading && row.rowId === activeAccordionRowId) || row.rowId === openActiveAccordionByRowId">
+            <ng-template #detail [ngTemplateOutlet]="inboxListDetailContentTemplate"
+              [ngTemplateOutletContext]="{$implicit: row}">
+            </ng-template>
+          </div>
+        </div>
+        <!--  END  -->
+      </div>
+    </div>
+  </div>
+</div>

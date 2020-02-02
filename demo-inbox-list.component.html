@@ -1,0 +1,24 @@
+<div class="inboxlist">
+  <app-inbox [models]="inboxModel" (onRowClickEmit)="onFirstRowClick($event)"
+    [isInboxHeaderAvailable]="true" [isFormatRowContentAvailable]="isFirstInboxHideRowFormat"
+    [title]="title"
+    [isGroupInboxActive]="isFirstGroupInboxActive"
+    [openActiveAccordionByRowId]="openActiveFirstAccordionByRowId">
+    <ng-template let-row>
+      <app-inbox [models]="inboxSecondModel" (onRowClickEmit)="onSubRowClick($event)" [isInboxHeaderAvailable]="true"
+        [isFormatRowContentAvailable]="isSecondInboxHideRowFormat">
+        <ng-template let-row>
+          <img src="https://www.worksap.com/files/7414/2172/5277/wap_main2.jpg">
+        </ng-template>
+      </app-inbox>
+    </ng-template>
+  </app-inbox>
+
+  <app-inbox [models]="inboxThirdModel" (onRowClickEmit)="onSecondRowClick($event)" [isInboxHeaderAvailable]="true"
+    [isFormatRowContentAvailable]="isThirdInboxHideRowFormat" [title]="title"
+    [isGroupInboxActive]="isSecondGroupInboxActive">
+    <ng-template let-row>
+      <img src="https://www.worksap.com/files/2515/0960/2439/ai-works-users-outside.jpg">
+    </ng-template>
+  </app-inbox>
+</div>

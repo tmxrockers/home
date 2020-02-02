@@ -1,0 +1,126 @@
+.gs-inbox {
+  margin: 8px;
+  // display: inline-flex;
+  .gs-inbox-list {
+    height: 100%;
+    width: 100%;
+    .gs-inbox-list-title {
+      margin: 16px 0px 16px 0px;
+      }
+    .gs-inbox-list-header {
+      display: flex;
+      flex-direction: row;
+      cursor: pointer;
+      background-color: white;
+      box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.12);
+      border-radius: 4px;
+      border: 1px solid #dfe1e5;
+      margin-bottom: 4px;
+      .gs-inbox-list-header-item {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+    .col-1{
+      padding: 12px;
+      flex-basis: 48px
+    }
+    .col-2{
+      padding: 12px;
+      flex-basis: 96px;
+    }
+    .col-3{
+      padding: 12px;
+      flex-basis: 144px;
+    }
+    .col-4{
+      padding: 12px;
+      flex-basis: 192px;
+    }
+    .col-5{
+      padding: 12px;
+      flex-basis: 240px;
+    }
+    .col-6{
+      padding: 12px;
+      flex-basis: 288px;
+    }
+    .left {
+      text-align: left;
+    }
+    .right {
+      text-align: right;
+    }
+    .center {
+      text-align: center;
+    }
+  }
+  .gs-inbox-rows {
+    box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.12);
+    .gs-inbox-row {
+      // display: flex;
+      .gs-inbox-row-list {
+        display: flex;
+        cursor: pointer;
+        background-color: white;
+        border-radius: 4px;
+        // border: 1px solid #dfe1e5;
+        // border-bottom: none;
+        border-bottom: 1px solid #dfe1e5;
+        .gs-inbox-row-list-item {
+          .col-1{
+            padding: 12px;
+            flex-basis: 48px
+          }
+          .col-2{
+            padding: 12px;
+            flex-basis: 96px;
+          }
+          .col-3{
+            padding: 12px;
+            flex-basis: 144px;
+          }
+          .col-4{
+            padding: 12px;
+            flex-basis: 192px;
+          }
+          .col-5{
+            padding: 12px;
+            flex-basis: 240px;
+          }
+          .col-6{
+            padding: 12px;
+            flex-basis: 288px;
+          }
+          .left {
+            text-align: left;
+          }
+          .right {
+            text-align: right;
+          }
+          .center {
+            text-align: center;
+          }
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+      .detail {
+        background-color: white;
+        border-radius: 4px;
+        border-bottom: 1px solid #dfe1e5;
+        // padding: 0 24px 16px;
+        padding: 16px;
+        white-space: nowrap;
+        overflow: auto;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+@mixin colSize() {
+
+}
