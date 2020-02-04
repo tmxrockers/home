@@ -1,0 +1,547 @@
+<div class="gs-inbox">
+  <!-- <ng-container *ngIf="isGroupInbox"> -->
+  <!-- <span appInboxGroupList></span> -->
+  <!-- </ng-container> -->
+  <div class="gs-inbox-list" *ngFor="let model of models">
+    <div *ngIf="title" class="gs-inbox-list-title">
+      <label title="{{title}}">{{title}}</label>
+    </div>
+    <!-- This is the container for Inbox Header-->
+    <ng-container *ngIf="isInboxHeaderAvailable">
+      <div class="gs-inbox-list-header">
+        <div class="gs-inbox-list-header-item col-{{column.colSize}} {{column.align}}"
+          *ngFor="let column of model.columns">
+          <span title="{{column.label}}" class="col-text" id="{{column.id}}">
+            {{column.label}}
+          </span>
+        </div>
+      </div>
+    </ng-container>
+    <!-- Header Content END -->
+    <div class="gs-inbox-rows">
+      <div class="gs-inbox-row" *ngFor="let row of model.rows"
+        [class.accordion]="(row.rowId === activeAccordionRowId) || row.rowId === openActiveAccordionByRowId">
+        <!-- This is the container for showing all the row content by using isFormatRowContentAvailable-->
+        <ng-container
+          *ngIf="isFormatRowContentAvailable.length === 0 || (row.rowId !== activeAccordionRowId && row.rowId !== openActiveAccordionByRowId)">
+          <div class="gs-inbox-row-list" id="{{row.rowId}}" (click)="onClickRow(row)">
+            <div class="gs-inbox-row-list-item col-{{column.colSize}} {{column.align}}"
+              *ngFor="let column of model.columns">
+              <span title="{{row.values[0][column.id]}}">{{row.values[0][column.id]}}</span>
+            </div>
+            <div class="item-buttons" #buttonRef>
+              <mat-icon (click)="show(buttonRef, $event)">more_vert</mat-icon>
+            </div>
+          </div>
+        </ng-container>
+        <!--  END  -->
+
+        <!-- This is the container for hiding the specific row content -->
+        <ng-container
+          *ngIf="isFormatRowContentAvailable.length > 0 && row.rowId === activeAccordionRowId || row.rowId === openActiveAccordionByRowId">
+          <div class="gs-inbox-row-list" id="{{row.rowId}}" (click)="onClickRow(row)">
+            <div class="gs-inbox-row-list-item col-{{column.colSize}} {{column.align}}"
+              *ngFor="let column of isFormatRowContentAvailable">
+              <span title="{{row.values[0][column.id]}}">{{row.values[0][column.id]}}</span>
+            </div>
+            <div class="item-buttons" #buttonRef>
+              <mat-icon (click)="show(buttonRef, $event)">more_vert</mat-icon>
+            </div>
+          </div>
+        </ng-container>
+        <!--  END  -->
+
+        <div *ngIf="isLoading && row.rowId === activeAccordionRowId">
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </div>
+        <!-- This is the inbox detail content -->
+        <ng-container
+          *ngIf="(!isLoading && row.rowId === activeAccordionRowId) || row.rowId === openActiveAccordionByRowId">
+          <div class="detail">
+            <ng-template #detail [ngTemplateOutlet]="inboxListDetailContentTemplate"
+              [ngTemplateOutletContext]="{$implicit: row}">
+            </ng-template>
+          </div>
+        </ng-container>
+      </div>
+      <!--  END  -->
+    </div>
+  </div>
+</div>
+
+
+
+
+
+import { Component, OnInit, Input, TemplateRef, ContentChild, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
+import { InboxModel, InboxRows, InboxColumns } from './inbox.model';
+import { Subject } from 'rxjs';
+import { Popover } from '../pop-over/service/popover.service';
+
+export class InboxOnRowClickEvent {
+  loading: Subject<boolean>;
+  data: any;
+}
+@Component({
+  selector: 'app-inbox',
+  templateUrl: './inbox.component.html',
+  styleUrls: ['./inbox.component.scss']
+})
+export class InboxComponent implements OnInit {
+  @Input() title: string;
+  @Input() models: InboxModel;
+  @Input() openActiveAccordionByRowId: string;
+  @Input() isInboxHeaderAvailable: boolean;
+  @Input() isFormatRowContentAvailable: InboxColumns[] = [];
+  @Input() isGroupInboxActive: Subject<boolean> = new Subject();;
+  @Output() onRowClickEmit: EventEmitter<InboxOnRowClickEvent> = new EventEmitter<InboxOnRowClickEvent>();
+
+  @ContentChild(TemplateRef, { static: false }) inboxListDetailContentTemplate: TemplateRef<any>;
+  isLoading: boolean;
+  activeAccordionRowId: string = null;
+  loadingSubject: Subject<boolean> = new Subject();
+
+  // @ViewChild('actionButton', { static: true }) infiniteScroll: ElementRef<HTMLElement>;
+  constructor(private popper: Popover) { }
+
+  ngOnInit() {
+    this.loadingSubject.subscribe(loading => {
+      this.isLoading = loading;
+    });
+
+    this.isGroupInboxActive.subscribe(isGroupInboxActive => {
+      if (isGroupInboxActive === false) {
+        this.activeAccordionRowId = null;
+      }
+    });
+  }
+
+  onClickRow(row: InboxRows) {
+    if (row.clickable === false) {
+      return;
+    }
+    if (row.rowId === this.openActiveAccordionByRowId) {
+      this.openActiveAccordionByRowId = null;
+      this.activeAccordionRowId = null;
+      return;
+    }
+    if (this.activeAccordionRowId !== row.rowId) {
+      this.activeAccordionRowId = row.rowId;
+      this.onRowClickEmit.emit({
+        loading: this.loadingSubject,
+        data: row.data
+      });
+    } else {
+      this.activeAccordionRowId = null;
+    }
+  }
+
+  show(buttonRef: TemplateRef<any>, event) {
+    event.stopPropagation()
+    // const a = this.infiniteScroll;
+    const ref = this.popper.open({
+      // content,
+      //  content: 'Hello world!',
+      origin: buttonRef
+    });
+
+    ref.afterClosed$.subscribe(res => {
+        console.log(res);
+    });
+
+  }
+}
+
+
+
+
+
+
+
+.gs-inbox {
+  margin: 8px;
+  // display: inline-flex;
+  .gs-inbox-list {
+    height: 100%;
+    width: 100%;
+    .gs-inbox-list-title {
+      margin: 16px 0px 16px 0px;
+      }
+    .gs-inbox-list-header {
+      display: flex;
+      flex-direction: row;
+      cursor: pointer;
+      background-color: white;
+      box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.12);
+      border-radius: 4px;
+      border: 1px solid #dfe1e5;
+      margin-bottom: 4px;
+      height: 32px;
+      align-items: center;
+      .gs-inbox-list-header-item {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+    .col-1{
+      padding: 12px;
+      flex-basis: 48px
+    }
+    .col-2{
+      padding: 12px;
+      flex-basis: 96px;
+    }
+    .col-3{
+      padding: 12px;
+      flex-basis: 144px;
+    }
+    .col-4{
+      padding: 12px;
+      flex-basis: 192px;
+    }
+    .col-5{
+      padding: 12px;
+      flex-basis: 240px;
+    }
+    .col-6{
+      padding: 12px;
+      flex-basis: 288px;
+    }
+    .left {
+      text-align: left;
+    }
+    .right {
+      text-align: right;
+    }
+    .center {
+      text-align: center;
+    }
+  }
+  .gs-inbox-rows {
+    transition: margin 0.15s ease-out;
+    .gs-inbox-row {
+      &.accordion {
+        box-shadow: 5px 6px 5px #aaaaaa;
+        margin: 16px -20px;
+        transition: margin 0.15s ease-in;
+      }
+      // display: flex;
+      .gs-inbox-row-list {
+        display: flex;
+        cursor: pointer;
+        background-color: white;
+        border-radius: 4px;
+        // border: 1px solid #dfe1e5;
+        // border-bottom: none;
+        border-bottom: 1px solid #dfe1e5;
+        height: 48px;
+        align-items: center;
+        .gs-inbox-row-list-item {
+          .col-1{
+            padding: 12px;
+            flex-basis: 48px
+          }
+          .col-2{
+            padding: 12px;
+            flex-basis: 96px;
+          }
+          .col-3{
+            padding: 12px;
+            flex-basis: 144px;
+          }
+          .col-4{
+            padding: 12px;
+            flex-basis: 192px;
+          }
+          .col-5{
+            padding: 12px;
+            flex-basis: 240px;
+          }
+          .col-6{
+            padding: 12px;
+            flex-basis: 288px;
+          }
+          .left {
+            text-align: left;
+          }
+          .right {
+            text-align: right;
+          }
+          .center {
+            text-align: center;
+          }
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+      .detail {
+        background-color: white;
+        border-radius: 4px;
+        border-bottom: 1px solid #dfe1e5;
+        // padding: 0 24px 16px;
+        // padding: 16px;
+        white-space: nowrap;
+        overflow: auto;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+.item-buttons {
+  align-items: center;
+       padding: 4px;
+    &:hover {
+      cursor: pointer;
+       background-color: lightgray;
+       border-radius: 16px;
+       align-items: center;
+       padding: 4px;
+    }
+}
+@mixin colSize() {
+
+}
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+/* .popover {
+  background-color: #fff;
+  padding: 1rem;
+  font-size: 14px;
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+} */
+
+:host {
+  display: block;
+  max-height: 200px;
+  width: 200px;
+  overflow: auto;
+}
+.action-button {
+  padding-left: 0px;
+  list-style: none;
+  background-color: #fff;
+  box-shadow: 2px 2px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+.hover-menu-item {
+  cursor: pointer;
+  padding-left: 8px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #dfe1e5;
+}
+.hover-menu-item:hover {
+  border-radius: 4px;
+  background-color: lightgray;
+}
+
+
+
+<div class="popover">
+	<!-- <ng-container [ngSwitch]="renderMethod">
+		<div *ngSwitchCase="'text'" [innerHTML]="content"></div>
+		<ng-container *ngSwitchCase="'template'">
+			<ng-container *ngTemplateOutlet="content; context: context"></ng-container>
+		</ng-container>
+		<ng-container *ngSwitchCase="'component'">
+			<ng-container *ngComponentOutlet="content"></ng-container>
+		</ng-container>
+  </ng-container> -->
+  <ul class="action-button">
+    <li class="hover-menu-item" (click)="onClickItem($event)">
+      Action-1
+    </li>
+    <li class="hover-menu-item">
+     Action-2
+   </li>
+  </ul>
+  <!-- <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+    <a class="button is-danger is-small"></a>
+  </div> -->
+</div>
+
+
+
+
+
+
+
+
+import { Component, OnInit, TemplateRef, Type } from '@angular/core';
+import { PopoverRef, PopoverContent } from './popover-ref';
+
+@Component({
+  templateUrl: './popover.component.html',
+  styleUrls: ['./popover.component.css']
+})
+export class PopoverComponent implements OnInit {
+  renderMethod: 'template' | 'component' | 'text' = 'component';
+  content: PopoverContent;
+  context;
+
+  constructor(private popoverRef: PopoverRef) {
+  }
+
+  ngOnInit() {
+    // this.content = this.popoverRef.content;
+
+    // if (typeof this.content === 'string') {
+    //   this.renderMethod = 'text';
+    // }
+
+    // if (this.content instanceof TemplateRef) {
+    //   this.renderMethod = 'template';
+    //   this.context = {
+    //     close: this.popoverRef.close.bind(this.popoverRef)
+    //   }
+    // }
+
+  }
+  onClickItem($event) {
+    this.popoverRef.close();
+    console.log($event);
+  }
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+import { Injectable, Injector } from '@angular/core';
+import { Overlay, ConnectionPositionPair, PositionStrategy, OverlayConfig } from '@angular/cdk/overlay';
+import { PortalInjector, ComponentPortal } from '@angular/cdk/portal';
+import { PopoverContent, PopoverRef } from '../popover/popover-ref';
+import { PopoverComponent } from '../popover/popover.component';
+
+export type PopoverParams<T> = {
+  width?: string | number;
+  height?: string | number;
+  origin?: HTMLElement;
+  content?: PopoverContent;
+  data?: T;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class Popover {
+  constructor(private overlay: Overlay, private injector: Injector) { }
+
+  open<T>({origin}): PopoverRef<T> {
+    const overlayRef = this.overlay.create(this.getOverlayConfig(origin));
+    const popoverRef = new PopoverRef<T>(overlayRef);
+
+    const injector = this.createInjector(popoverRef, this.injector);
+    overlayRef.attach(new ComponentPortal(PopoverComponent, null, injector));
+
+    return popoverRef;
+  }
+
+  private getOverlayConfig(origin): OverlayConfig {
+    return new OverlayConfig({
+      hasBackdrop: true,
+      // width,
+      // height,
+      backdropClass: 'popover-backdrop',
+      positionStrategy: this.getOverlayPosition(origin),
+      scrollStrategy: this.overlay.scrollStrategies.reposition()
+    });
+  }
+
+  private getOverlayPosition(origin: HTMLElement): PositionStrategy {
+    const positionStrategy = this.overlay.position()
+      .flexibleConnectedTo(origin)
+      .withPositions(this.getPositions())
+      .withFlexibleDimensions(false)
+      .withPush(false);
+
+    return positionStrategy;
+  }
+
+  createInjector(popoverRef: PopoverRef, injector: Injector) {
+    const tokens = new WeakMap([[PopoverRef, popoverRef]]);
+    return new PortalInjector(injector, tokens);
+  }
+
+  // private getPositions(): ConnectionPositionPair[] {
+  //   return [
+  //     {
+  //       originX: 'start',
+  //       originY: 'top',
+  //       overlayX: 'start',
+  //       overlayY: 'bottom'
+  //     }
+  //   ];
+  // }
+
+  private getPositions(): ConnectionPositionPair[] {
+    return [
+      {
+        originX: 'start',
+        originY: 'top',
+        overlayX: 'start',
+        overlayY: 'bottom'
+      },
+      {
+        originX: 'end',
+        originY: 'bottom',
+        overlayX: 'end',
+        overlayY: 'top',
+      },
+    ]
+  }
+
+}
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+import { OverlayRef } from '@angular/cdk/overlay';
+import { Subject } from 'rxjs';
+import { TemplateRef, Type } from '@angular/core';
+
+export type PopoverCloseEvent<T = any> = {
+  type: 'backdropClick' | 'close';
+  data: T;
+}
+
+export type PopoverContent = TemplateRef<any> | Type<any> | string;
+
+export class PopoverRef<T = any> {
+  private afterClosed = new Subject<PopoverCloseEvent<T>>();
+  afterClosed$ = this.afterClosed.asObservable();
+
+  constructor(public overlay: OverlayRef) {
+    overlay.backdropClick().subscribe(() => {
+      this._close('backdropClick', null);
+    });
+  }
+
+  close(data?: T) {
+    this._close('close', data);
+  }
+
+  private _close(type: PopoverCloseEvent['type'], data?: T) {
+    this.overlay.dispose();
+    this.afterClosed.next({
+      type,
+      data
+    });
+    this.afterClosed.complete();
+  }
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
