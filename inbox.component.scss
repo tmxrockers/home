@@ -16,6 +16,8 @@
       border-radius: 4px;
       border: 1px solid #dfe1e5;
       margin-bottom: 4px;
+      height: 32px;
+      align-items: center;
       .gs-inbox-list-header-item {
         white-space: nowrap;
         overflow: hidden;
@@ -57,8 +59,18 @@
     }
   }
   .gs-inbox-rows {
-    box-shadow: 0px 5px 5px rgba(0, 0, 0, 0.12);
+    // transition: margin 0.15s ease-out;
+    // transition: all 225ms cubic-bezier(.4,0,.2,1),box-shadow 280ms cubic-bezier(.4,0,.2,1);
     .gs-inbox-row {
+      transition: margin 0.15s ease-out;
+      // transition: all 225ms cubic-bezier(.4,0,.2,1);
+      &.accordion {
+        box-shadow: 5px 6px 5px #aaaaaa;
+        margin: 16px -20px;
+        // transition: margin 0.15s ease-in;
+        transition:margin 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        // transition: all 225ms cubic-bezier(.4,0,.2,1),box-shadow 280ms cubic-bezier(.4,0,.2,1)
+      }
       // display: flex;
       .gs-inbox-row-list {
         display: flex;
@@ -68,6 +80,8 @@
         // border: 1px solid #dfe1e5;
         // border-bottom: none;
         border-bottom: 1px solid #dfe1e5;
+        height: 48px;
+        align-items: center;
         .gs-inbox-row-list-item {
           .col-1{
             padding: 12px;
@@ -112,7 +126,7 @@
         border-radius: 4px;
         border-bottom: 1px solid #dfe1e5;
         // padding: 0 24px 16px;
-        padding: 16px;
+        // padding: 16px;
         white-space: nowrap;
         overflow: auto;
         text-overflow: ellipsis;
@@ -120,7 +134,17 @@
     }
   }
 }
-
+.item-buttons {
+  align-items: center;
+       padding: 4px;
+    &:hover {
+      cursor: pointer;
+       background-color: lightgray;
+       border-radius: 16px;
+       align-items: center;
+       padding: 4px;
+    }
+}
 @mixin colSize() {
 
 }

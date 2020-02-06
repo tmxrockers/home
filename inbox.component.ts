@@ -1,6 +1,7 @@
-import { Component, OnInit, Input, TemplateRef, ContentChild, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, TemplateRef, ContentChild, Output, EventEmitter, ElementRef, ViewChild } from '@angular/core';
 import { InboxModel, InboxRows, InboxColumns } from './inbox.model';
 import { Subject } from 'rxjs';
+import { Popover } from '../pop-over/service/popover.service';
 
 export class InboxOnRowClickEvent {
   loading: Subject<boolean>;
@@ -25,8 +26,8 @@ export class InboxComponent implements OnInit {
   activeAccordionRowId: string = null;
   loadingSubject: Subject<boolean> = new Subject();
 
-  constructor() {
-  }
+  // @ViewChild('actionButton', { static: true }) infiniteScroll: ElementRef<HTMLElement>;
+  constructor(private popper: Popover) { }
 
   ngOnInit() {
     this.loadingSubject.subscribe(loading => {
@@ -58,5 +59,20 @@ export class InboxComponent implements OnInit {
     } else {
       this.activeAccordionRowId = null;
     }
+  }
+
+  show(buttonRef: TemplateRef<any>, event) {
+    event.stopPropagation()
+    // const a = this.infiniteScroll;
+    const ref = this.popper.open({
+      // content,
+      //  content: 'Hello world!',
+      origin: buttonRef
+    });
+
+    ref.afterClosed$.subscribe(res => {
+        console.log(res);
+    });
+
   }
 }
