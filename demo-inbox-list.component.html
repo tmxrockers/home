@@ -1,16 +1,16 @@
 <div class="inboxlist">
-  <app-inbox [models]="inboxModel" (onRowClickEmit)="onFirstRowClick($event)"
-    [isInboxHeaderAvailable]="true" [isFormatRowContentAvailable]="isFirstInboxHideRowFormat"
-    [title]="title"
-    [isGroupInboxActive]="isFirstGroupInboxActive"
-    [openActiveAccordionByRowId]="openActiveFirstAccordionByRowId">
+  <app-inbox [models]="inboxModel" (onRowClickEmit)="onFirstRowClick($event)" [isInboxHeaderAvailable]="true"
+    [isFormatRowContentAvailable]="isFirstInboxHideRowFormat" [title]="title"
+    [isGroupInboxActive]="isFirstGroupInboxActive" [openActiveAccordionByRowId]="openActiveFirstAccordionByRowId">
     <ng-template let-row>
-      <app-inbox [models]="inboxSecondModel" (onRowClickEmit)="onSubRowClick($event)" [isInboxHeaderAvailable]="true"
-        [isFormatRowContentAvailable]="isSecondInboxHideRowFormat">
-        <ng-template let-row>
-          <img src="https://www.worksap.com/files/7414/2172/5277/wap_main2.jpg">
-        </ng-template>
-      </app-inbox>
+      <div class="sublist-container">
+        <app-inbox [models]="inboxSecondModel" (onRowClickEmit)="onSubRowClick($event)" [isInboxHeaderAvailable]="false"
+          [isFormatRowContentAvailable]="isSecondInboxHideRowFormat">
+          <ng-template let-row>
+            <img src="https://www.worksap.com/files/7414/2172/5277/wap_main2.jpg">
+          </ng-template>
+        </app-inbox>
+      </div>
     </ng-template>
   </app-inbox>
 
@@ -22,3 +22,4 @@
     </ng-template>
   </app-inbox>
 </div>
+

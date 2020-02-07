@@ -6,6 +6,7 @@
     <div *ngIf="title" class="gs-inbox-list-title">
       <label title="{{title}}">{{title}}</label>
     </div>
+
     <!-- This is the container for Inbox Header-->
     <ng-container *ngIf="isInboxHeaderAvailable">
       <div class="gs-inbox-list-header">
@@ -37,18 +38,7 @@
         <!--  END  -->
 
         <!-- This is the container for hiding the specific row content -->
-        <ng-container
-          *ngIf="isFormatRowContentAvailable.length > 0 && row.rowId === activeAccordionRowId || row.rowId === openActiveAccordionByRowId">
-          <div class="gs-inbox-row-list" id="{{row.rowId}}" (click)="onClickRow(row)">
-            <div class="gs-inbox-row-list-item col-{{column.colSize}} {{column.align}}"
-              *ngFor="let column of isFormatRowContentAvailable">
-              <span title="{{row.values[0][column.id]}}">{{row.values[0][column.id]}}</span>
-            </div>
-            <!-- <div class="item-buttons" #buttonRef>
-              <mat-icon (click)="show(buttonRef, $event)">more_vert</mat-icon>
-            </div> -->
-          </div>
-        </ng-container>
+        <ng-template [ngTemplateOutlet]="headerPart" [ngTemplateOutletContext]="{$implicit: row}"></ng-template>
         <!--  END  -->
 
         <div *ngIf="isLoading && row.rowId === activeAccordionRowId">
@@ -68,3 +58,15 @@
     </div>
   </div>
 </div>
+
+<ng-template #headerPart let-row>
+  <ng-container
+    *ngIf="isFormatRowContentAvailable.length > 0 && row.rowId === activeAccordionRowId || row.rowId === openActiveAccordionByRowId">
+    <div class="gs-inbox-row-list" id="{{row.rowId}}" (click)="onClickRow(row)">
+      <div class="gs-inbox-row-list-item col-{{column.colSize}} {{column.align}}"
+        *ngFor="let column of isFormatRowContentAvailable">
+        <span title="{{row.values[0][column.id]}}">{{row.values[0][column.id]}}</span>
+      </div>
+    </div>
+  </ng-container>
+</ng-template>

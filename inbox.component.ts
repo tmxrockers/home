@@ -18,7 +18,7 @@ export class InboxComponent implements OnInit {
   @Input() openActiveAccordionByRowId: string;
   @Input() isInboxHeaderAvailable: boolean;
   @Input() isFormatRowContentAvailable: InboxColumns[] = [];
-  @Input() isGroupInboxActive: Subject<boolean> = new Subject();;
+  @Input() isGroupInboxActive: Subject<boolean> = new Subject();
   @Output() onRowClickEmit: EventEmitter<InboxOnRowClickEvent> = new EventEmitter<InboxOnRowClickEvent>();
 
   @ContentChild(TemplateRef, { static: false }) inboxListDetailContentTemplate: TemplateRef<any>;
@@ -43,6 +43,9 @@ export class InboxComponent implements OnInit {
 
   onClickRow(row: InboxRows) {
     if (row.clickable === false) {
+      return;
+    }
+    if (this.isLoading && this.activeAccordionRowId === row.rowId) {
       return;
     }
     if (row.rowId === this.openActiveAccordionByRowId) {

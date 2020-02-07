@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { InboxModel, InboxColumns, InboxRows } from '../../inbox/inbox.model';
+import { InboxModel, InboxColumns, InboxRows, ActionButton, ActionMenuItem } from '../../inbox/inbox.model';
 import { InboxOnRowClickEvent } from '../../inbox/inbox.component';
 import { Subject } from 'rxjs';
 
@@ -20,7 +20,7 @@ export class DemoInboxListComponent implements OnInit {
   inboxThirdModel: InboxModel[] = [];
   inboxThirdColumns: InboxColumns[] = [];
   inboxThirdRows: InboxRows[] = [];
-  openActiveFirstAccordionByRowId: string = '1';
+  openActiveFirstAccordionByRowId: string = '';
   openActiveSecondAccordionByRowId: string = '4';
   openActiveThirdAccordionByRowId: string = '10';
   isFirstInboxHideRowFormat: InboxColumns[] = [];
@@ -29,11 +29,25 @@ export class DemoInboxListComponent implements OnInit {
   title: string;
   isFirstGroupInboxActive: Subject<boolean> = new Subject();
   isSecondGroupInboxActive: Subject<boolean> = new Subject();
+
+  actionButton: ActionButton[] = [];
+  actionMenuItem: ActionMenuItem[] = [];
   constructor() { }
 
   ngOnInit() {
     this.title = 'This is a demo title content';
-
+    this.actionButton = [{
+      actionId: 'hover-1',
+      menuItem: this.actionMenuItem
+    }];
+    this.actionMenuItem = [{
+      id: '1',
+      label: 'Action-1',
+    },
+    {
+      id: '2',
+      label: 'Action-1'
+    }];
     this.inboxColumns = [{
       id: 'no',
       label: 'Number',
@@ -97,6 +111,7 @@ export class DemoInboxListComponent implements OnInit {
     for (let i = 1; i < 3; i++) {
       this.inboxRows.push({
         rowId: i.toString(),
+        actions: this.actionButton,
         values: [{
           no: i.toString(),
           name: 'Loream ipsam-' + i,
@@ -110,7 +125,26 @@ export class DemoInboxListComponent implements OnInit {
     }
     this.inboxModel.push(new InboxModel(this.inboxColumns, this.inboxRows));
 
-    for (let i = 4; i < 8; i++) {
+    this.inboxRows = [];
+
+    for (let i = 4; i < 7; i++) {
+      this.inboxRows.push({
+        rowId: i.toString(),
+        actions: this.actionButton,
+        values: [{
+          no: i.toString(),
+          name: 'Loream ipsam-' + i,
+          age: '24',
+          designation: 'The Revange Doctor',
+          salary: 24000 * i,
+          address: 'Its very engaging street' + i,
+          state: 'TamilNadu' + i
+        }],
+      });
+    }
+    this.inboxModel.push(new InboxModel(this.inboxColumns, this.inboxRows));
+
+    for (let i = 4; i < 6; i++) {
       this.inboxSecondRows.push({
         rowId: i.toString(),
         values: [{
@@ -127,7 +161,7 @@ export class DemoInboxListComponent implements OnInit {
     }
     this.inboxSecondModel.push(new InboxModel(this.inboxColumns, this.inboxSecondRows));
 
-    for (let i = 10; i < 15; i++) {
+    for (let i = 10; i < 12; i++) {
       this.inboxThirdRows.push({
         rowId: i.toString(),
         values: [{
@@ -155,8 +189,7 @@ export class DemoInboxListComponent implements OnInit {
 
   onFirstRowClick(event: InboxOnRowClickEvent) {
     event.loading.next(true);
-    this.isSecondGroupInboxActive.next(false);
-    this.isFirstGroupInboxActive.next(true);
+    // this.isFirstGroupInboxActive.next(true);
     setTimeout(() => {
       event.loading.next(false);
     }, 1000);
@@ -164,9 +197,9 @@ export class DemoInboxListComponent implements OnInit {
 
   onSecondRowClick(event: InboxOnRowClickEvent) {
     event.loading.next(true);
-    this.openActiveFirstAccordionByRowId = null;
-    this.isFirstGroupInboxActive.next(false);
-    this.isSecondGroupInboxActive.next(true);
+    // this.openActiveFirstAccordionByRowId = null;
+    // this.isFirstGroupInboxActive.next(false);
+    // this.isSecondGroupInboxActive.next(true);
     setTimeout(() => {
       event.loading.next(false);
     }, 1000);

@@ -18,4 +18,16 @@ export interface InboxRows {
   values: Array<any>;
   clickable?: boolean;
   data?: any;
+  actions?: ActionButton[];
+}
+
+export interface ActionButton {
+  actionId: string;
+  menuItem: Array<ActionMenuItem>;
+}
+export interface ActionMenuItem {
+  id: string;
+  label: string;
+  isMenuDisable?: boolean;
+  data?: any;
 }
