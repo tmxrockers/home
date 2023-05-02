@@ -1,0 +1,1 @@
+The Java API's for the GDR screen are taking an extended amount of time to respond locally due to the database being located outside of our region. This is negatively affecting our development progress, which is why we are considering having at least one High Virtual Desktop (HVD) designated for the GDR team's use.
