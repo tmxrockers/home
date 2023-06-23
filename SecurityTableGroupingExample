@@ -1,0 +1,80 @@
+package application.rest.v1;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class SecurityTableGroupingExample {
+    public static void main(String[] args) {
+        // Assuming you have a list of SecurityTable objects
+        List<SecurityTable> securityTableList = Arrays.asList(
+                new SecurityTable(1, "CIO1", "2dot1", "3dot1", "Vendor1"),
+                new SecurityTable(2, "CIO1", "2dot1", "3dot2", "Vendor2"),
+                new SecurityTable(3, "CIO2", "2dot2", null, "Vendor3"),
+                new SecurityTable(4, "CIO3", null, null, "Vendor4"),
+                new SecurityTable(5, "CIO4", "2dot3", "3dot3", "Vendor5"),
+                new SecurityTable(6, "CIO4", "2dot3", "3dot4", "Vendor6")
+        );
+
+        // Grouping the data based on cioName and 2dot
+        Map<String, Map<String, Set<String>>> groupedData = securityTableList.stream()
+                .filter(entry -> entry.get2dot() != null) // Exclude entries where 2dot is null
+                .collect(Collectors.groupingBy(
+                        SecurityTable::getCioName,
+                        Collectors.groupingBy(
+                                SecurityTable::get2dot,
+                                Collectors.mapping(SecurityTable::get3dot, Collectors.toSet())
+                        )
+                ));
+
+        // Printing the grouped data
+        for (Map.Entry<String, Map<String, Set<String>>> cioEntry : groupedData.entrySet()) {
+            String cioName = cioEntry.getKey();
+            System.out.println("CIO Name: " + cioName);
+
+            Map<String, Set<String>> cioGroup = cioEntry.getValue();
+            for (Map.Entry<String, Set<String>> dotEntry : cioGroup.entrySet()) {
+                String dotValue = dotEntry.getKey();
+                System.out.println("  2dot: " + dotValue);
+
+                Set<String> dotGroup = dotEntry.getValue();
+                System.out.println("  3dots: " + dotGroup);
+            }
+            System.out.println();
+        }
+    }
+}
+
+class SecurityTable {
+    private int nbkid;
+    private String cioName;
+    private String dot2;
+    private String dot3;
+    private String vendor;
+
+    public SecurityTable(int nbkid, String cioName, String dot2, String dot3, String vendor) {
+        this.nbkid = nbkid;
+        this.cioName = cioName;
+        this.dot2 = dot2;
+        this.dot3 = dot3;
+        this.vendor = vendor;
+    }
+
+    public int getNbkid() {
+        return nbkid;
+    }
+
+    public String getCioName() {
+        return cioName;
+    }
+
+    public String get2dot() {
+        return dot2;
+    }
+
+    public String get3dot() {
+        return dot3;
+    }
+
+    public String getVendor() {
+        return vendor;
+    }
+}
