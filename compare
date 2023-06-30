@@ -1,0 +1,82 @@
+function compareObjects(obj1: any, obj2: any): boolean {
+  // Check if both objects are null or undefined
+  if (obj1 === obj2) {
+    return true;
+  }
+
+  // Check if either object is null or undefined
+  if (obj1 === null || obj1 === undefined || obj2 === null || obj2 === undefined) {
+    return false;
+  }
+
+  // Get the keys of the objects
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  // Check if the number of keys is the same
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  // Iterate over the keys and compare the values
+  for (const key of keys1) {
+    // Check if the current key exists in obj2
+    if (!obj2.hasOwnProperty(key)) {
+      return false;
+    }
+
+    // Compare the values of the properties
+    const value1 = obj1[key];
+    const value2 = obj2[key];
+
+    // Recursively compare nested objects or arrays
+    if (typeof value1 === 'object' && typeof value2 === 'object') {
+      if (!compareObjects(value1, value2)) {
+        return false;
+      }
+    } else if (Array.isArray(value1) && Array.isArray(value2)) {
+      if (!compareArrays(value1, value2)) {
+        return false;
+      }
+    } else {
+      // Compare primitive values
+      if (value1 !== value2) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+function compareArrays(arr1: any[], arr2: any[]): boolean {
+  // Check if the length of the arrays is the same
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  // Iterate over the elements of the arrays and compare them
+  for (let i = 0; i < arr1.length; i++) {
+    // Compare the current elements
+    const element1 = arr1[i];
+    const element2 = arr2[i];
+
+    // Recursively compare nested objects or arrays
+    if (typeof element1 === 'object' && typeof element2 === 'object') {
+      if (!compareObjects(element1, element2)) {
+        return false;
+      }
+    } else if (Array.isArray(element1) && Array.isArray(element2)) {
+      if (!compareArrays(element1, element2)) {
+        return false;
+      }
+    } else {
+      // Compare primitive values
+      if (element1 !== element2) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
