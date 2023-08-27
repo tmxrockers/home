@@ -148,3 +148,50 @@ private void addReportsToRoleConfigMaster(ReportsByRoleConfigMasterDetails repor
         });
     }
 }
+
+
+/**
+ * Saves ReportsByRoleConfigMaster data and returns a response.
+ *
+ * @param reportsByRoleConfigMasterRequest The request containing ReportsByRoleConfigMaster data.
+ * @return ReportsByRoleConfigMasterResponse containing the result of the operation.
+ */
+@Override
+public ReportsByRoleConfigMasterResponse saveReportsByRoleConfigMaster(ReportsByRoleConfigMasterRequest reportsByRoleConfigMasterRequest) {
+    ReportsByRoleConfigMasterResponse reportsByRoleConfigMasterResponse = new ReportsByRoleConfigMasterResponse();
+
+    // Check if the list of reports is not empty
+    if (CollectionUtils.isNotEmpty(reportsByRoleConfigMasterRequest.getReportsByRoleConfigMasterDetails())) {
+        return transactionTemplate.execute((TransactionStatus transactionStatus) -> {
+            try {
+                doSaveReportsByRoleConfigMaster(reportsByRoleConfigMasterRequest);
+
+                // Set success status
+                Status status = ServicesUtil.getSuccessStatus(ServiceConstants.REPORTS_BY_ROLE_MASTER_CONFIG_SAVE_SUCCESS_MSG);
+                reportsByRoleConfigMasterResponse.setStatus(status);
+
+                return reportsByRoleConfigMasterResponse;
+            } catch (Exception exception) {
+                // Log the exception and set error status
+                AppLogger.LogError(classname + ": Exception occurred in saveReportsByRoleConfigMaster service:", exception);
+                Status status = ServicesUtil.getExceptionStatus(exception.getMessage());
+                reportsByRoleConfigMasterResponse.setStatus(status);
+
+                // Rollback the transaction
+                transactionStatus.setRollbackOnly();
+
+                return reportsByRoleConfigMasterResponse;
+            }
+        });
+    } else {
+        // If the list of reports is empty, set an error status
+        Status status = new Status();
+        status.setMessage("There is no reports or bundles configuration available to configure role reports master");
+        status.setType(ServiceConstants.FAILURE);
+        status.setStatusCode(ErrorCode.NO_REPORTS_AVAILABLE.getCode()); // Replace with a constant or enum
+
+        reportsByRoleConfigMasterResponse.setStatus(status);
+
+        return reportsByRoleConfigMasterResponse;
+    }
+}
