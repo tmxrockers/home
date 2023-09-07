@@ -30,8 +30,8 @@ public class DropdownDataGenerator {
         Calendar startDate = new GregorianCalendar(2022, Calendar.JUNE, 1);
         Calendar currentDate = Calendar.getInstance();
 
-        // Loop from the current date back to the start date
-        while (!currentDate.before(startDate)) {
+        // Loop while startDate is before or equal to the current date
+        while (!startDate.after(currentDate)) {
             Year year = new Year();
             year.id = startDate.get(Calendar.YEAR);
             year.name = String.valueOf(startDate.get(Calendar.YEAR));
@@ -42,8 +42,8 @@ public class DropdownDataGenerator {
             month.name = getMonthName(startDate.get(Calendar.MONTH));
             dropdownData.months.add(month);
 
-            // Move to the previous month
-            startDate.add(Calendar.MONTH, -1);
+            // Move to the next month
+            startDate.add(Calendar.MONTH, 1);
         }
 
         return dropdownData;
