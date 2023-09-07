@@ -1,0 +1,59 @@
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+class DropdownData {
+    List<Year> years = new ArrayList<>();
+    List<Month> months = new ArrayList<>();
+}
+
+class Year {
+    int id;
+    String name;
+}
+
+class Month {
+    int id;
+    String name;
+}
+
+public class DropdownDataGenerator {
+
+    public static void main(String[] args) {
+        DropdownData dropdownData = generateDropdownData();
+        // You can now use the dropdownData object as needed.
+    }
+
+    public static DropdownData generateDropdownData() {
+        DropdownData dropdownData = new DropdownData();
+        Calendar startDate = new GregorianCalendar(2022, Calendar.JUNE, 1);
+        Calendar currentDate = Calendar.getInstance();
+
+        // Loop from the current date back to the start date
+        while (!currentDate.before(startDate)) {
+            Year year = new Year();
+            year.id = startDate.get(Calendar.YEAR);
+            year.name = String.valueOf(startDate.get(Calendar.YEAR));
+            dropdownData.years.add(year);
+
+            Month month = new Month();
+            month.id = startDate.get(Calendar.MONTH) + 1; // Calendar.MONTH is 0-based
+            month.name = getMonthName(startDate.get(Calendar.MONTH));
+            dropdownData.months.add(month);
+
+            // Move to the previous month
+            startDate.add(Calendar.MONTH, -1);
+        }
+
+        return dropdownData;
+    }
+
+    public static String getMonthName(int monthIndex) {
+        String[] monthNames = {
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        };
+        return monthNames[monthIndex];
+    }
+}
