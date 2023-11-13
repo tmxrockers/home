@@ -1,0 +1,3 @@
+curl --location 'https://chatgpt143.p.rapidapi.com/share/827032b1-ed6a-403d-bc21-1d49fd55cce5' \
+--header 'X-RapidAPI-Key: bafda9ccd9msha157d62c6d98139p10e595jsn4f1aa09097f8' \
+--header 'Cookie: __cflb=0H28vVfF4aAyg2hkHFH9CkdHRXPsfCUf9oJVJGxFYBo'
