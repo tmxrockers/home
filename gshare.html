@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Rendering Example</title>
+	<link rel="stylesheet" type="text/css" href="https://cdn.oaistatic.com/_next/static/css/705d609c271e4900.css"></link>
+
+    <style>
+        /* content-container {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        } */
+
+        #loader-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #loader {
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #3498db;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+</head>
+<body>
+
+<div style="position: fixed;z-index: 1000;background: white;width: 100%;padding: 8px;">
+    <label for="urlInput" style="padding: 8px;">Enter API URL:</label>
+    <input type="text" id="urlInput" placeholder="https://example.com/api/content" style="width: 75%;">
+    <button onclick="submitUrl()" style="padding: 8px;">Submit</button>
+</div>
+
+<div id="loader-overlay">
+    <div id="loader"></div>
+</div>
+
+<div id="content-container">
+    <!-- Content will be dynamically loaded here -->
+</div>
+
+<script>
+    function showLoader() {
+        document.getElementById('loader-overlay').style.display = 'flex';
+    }
+
+    function hideLoader() {
+        document.getElementById('loader-overlay').style.display = 'none';
+    }
+    // Function to fetch and render HTML content from the API
+    function renderContent(url, headers) {
+        showLoader();
+
+        fetch(url, {
+            headers: headers
+        })
+            .then(response => response.text())
+            .then(htmlContent => {
+                // Update the content-container with the fetched HTML
+                document.getElementById('content-container').innerHTML = htmlContent;
+            })
+            .catch(error => {
+                console.error('Error fetching content:', error);
+            }).finally(() => {
+                hideLoader();
+            });
+    }
+
+    // Function to handle form submission
+    function submitUrl() {
+        const urlInput = document.getElementById('urlInput');
+        const apiUrl = urlInput.value.trim();
+
+        if (apiUrl) {
+            // Replace 'YOUR_API_KEY' with the actual API key or headers required
+            const customHeaders = {
+                'X-RapidAPI-Key': 'bafda9ccd9msha157d62c6d98139p10e595jsn4f1aa09097f8',
+                //'Content-Type': 'application/json',
+                // Add other headers as needed
+            };
+
+            // Call the renderContent function with the user-entered API endpoint and headers
+            renderContent('https://gshare.p.rapidapi.com/share/' + apiUrl, customHeaders);
+        } else {
+            alert('Please enter a valid API URL');
+        }
+    }
+</script>
+
+</body>
+</html>
