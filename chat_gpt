@@ -1,3 +1,45 @@
-curl --location 'https://chatgpt143.p.rapidapi.com/share/827032b1-ed6a-403d-bc21-1d49fd55cce5' \
---header 'X-RapidAPI-Key: bafda9ccd9msha157d62c6d98139p10e595jsn4f1aa09097f8' \
---header 'Cookie: __cflb=0H28vVfF4aAyg2hkHFH9CkdHRXPsfCUf9oJVJGxFYBo'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Rendering Example</title>
+</head>
+<body>
+
+<div id="content-container">
+    <!-- Content will be dynamically loaded here -->
+</div>
+
+<script>
+    // Function to fetch and render HTML content from the API
+    function renderContent(url, headers) {
+        fetch(url, {
+            headers: headers
+        })
+            .then(response => response.text())
+            .then(htmlContent => {
+                // Update the content-container with the fetched HTML
+                document.getElementById('content-container').innerHTML = htmlContent;
+            })
+            .catch(error => {
+                console.error('Error fetching content:', error);
+            });
+    }
+
+    // Replace 'API_ENDPOINT' with the actual API URL
+    const apiEndpoint = 'https://chatgpt143.p.rapidapi.com/share/827032b1-ed6a-403d-bc21-1d49fd55cce5';
+
+    // Replace 'YOUR_API_KEY' with the actual API key or headers required
+    const customHeaders = {
+        'X-RapidAPI-Key': 'bafda9ccd9msha157d62c6d98139p10e595jsn4f1aa09097f8',
+        // 'Content-Type': 'application/json',
+        // Add other headers as needed
+    };
+
+    // Call the renderContent function with the API endpoint and headers
+    renderContent(apiEndpoint, customHeaders);
+</script>
+
+</body>
+</html>
