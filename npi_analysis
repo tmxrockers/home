@@ -26,3 +26,47 @@ Account numbers should consist of 5 to 12 digits without any spaces or special c
 3. HRCI Freeform Text Remediation Approach
 3.1. UI Validation and Masking
 A user interface (UI) validation and masking mechanism will be implemented. If a user inputs Non-Public Information (NPI) data into a freeform text field and attempts to save without proper masking, a popup dialog will appear. This dialog serves as a confirmation prompt, asking the user to acknowledge whether the entered information is sensitive/NPI.
+
+
+Objective
+Implement a secure approach for handling Highly Regulated Confidential Information (HRCI) data within freeform text fields. The plan emphasizes UI validation and masking without the need for encryption.
+
+Implementation Steps
+UI Validation:
+
+Integrate a robust UI validation mechanism for freeform text fields.
+Trigger validation when a user attempts to save or submit a form.
+Masking Dialogue Box:
+
+Prompt users with a dialogue box upon detecting sensitive information.
+Request user acknowledgment regarding the sensitivity of the entered data.
+Masking Scenarios:
+
+Sensitive Data Detected:
+Prompt masking confirmation.
+Allow user acknowledgment for masking.
+Non-Sensitive Data Entered:
+Proceed without masking upon user confirmation.
+Integration with UI Framework:
+
+Integrate the UI validation and masking logic with the existing UI framework.
+Dialogue Box Implementation:
+
+Create a dialogue box component for displaying masking confirmations.
+Event Triggers:
+
+Define event triggers to initiate UI validation and masking on user interactions.
+Testing
+Conduct thorough testing of the UI validation and masking process:
+
+Test scenarios with both sensitive and non-sensitive data inputs.
+User Training
+Provide clear documentation and training materials for end-users:
+
+Explain the masking process and the importance of acknowledging sensitive information.
+Monitoring and Maintenance
+Implement monitoring mechanisms:
+
+Track user interactions to assess the effectiveness of UI validation and masking.
+Regularly update and maintain the system to adapt to changes in requirements or technology.
+This streamlined plan provides a clear roadmap for implementing UI validation and masking in freeform text fields, ensuring the secure handling of sensitive information without encryption.
