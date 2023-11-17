@@ -1,0 +1,28 @@
+Analysis Document: HRCI Freeform Text Issue
+1. HRCI Freeform Text Issue Details
+1.1. Problem Statement
+In GBS managed Applications, a critical issue has been identified where Highly Regulated Confidential Information (HRCI) data, including credit card numbers and Social Security Numbers (SSN), is being stored in freeform text fields without the necessary masking or encryption. This practice violates both the GIS data classification policy and the Payment Card Industry Data Security Standard (PCI DSS) for secure data storage. The Data Protection and Privacy (DPAP) team initiated an epicenter scan through the Free Form Text (FFT) program, revealing instances of HRCI data storage without proper protection. Subsequently, a Request for Information Security Enhancement (RISE) has been raised, categorizing the severity of the issue as level 3.
+
+1.2. Detailed Analysis
+A comprehensive review has been conducted, identifying a total of 77 freeform text components within GRM applications that are affected by this issue. These components are further categorized into 53 freeform text master configurations and 24 freeform text staffing transactions. For specific details on the affected components, please refer to the attached GRM Freeform Text Component list.
+
+2. HRCI Data for Remediation
+To address the HRCI data exposure, the remediation process must cover the following types of sensitive information:
+
+2.1. Social Security Number (SSN)
+The SSN must adhere to the format of a number with a 3-2-4 digit structure, separated by spaces or hyphens, and totaling 9 digits in length.
+
+2.2. Credit Card Number
+Credit card numbers should follow specific formats:
+
+xxxx xxxxxxx xxxx with spaces
+XXXX XXXXXXX XXXxx with spaces
+XXXX XXXX XXXX Xxxx with spaces
+Additionally, credit card numbers may be formatted with or without spaces and must fall within the range of 14 to 16 digits.
+
+2.3. Account Number
+Account numbers should consist of 5 to 12 digits without any spaces or special characters.
+
+3. HRCI Freeform Text Remediation Approach
+3.1. UI Validation and Masking
+A user interface (UI) validation and masking mechanism will be implemented. If a user inputs Non-Public Information (NPI) data into a freeform text field and attempts to save without proper masking, a popup dialog will appear. This dialog serves as a confirmation prompt, asking the user to acknowledge whether the entered information is sensitive/NPI.
