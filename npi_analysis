@@ -70,3 +70,41 @@ Implement monitoring mechanisms:
 Track user interactions to assess the effectiveness of UI validation and masking.
 Regularly update and maintain the system to adapt to changes in requirements or technology.
 This streamlined plan provides a clear roadmap for implementing UI validation and masking in freeform text fields, ensuring the secure handling of sensitive information without encryption.
+
+
+Encryption and Decryption Strategy for Freeform Text Fields
+Objective
+Design a secure approach for handling sensitive information, particularly Non-Public Information (NPI), within freeform text fields, considering the complexity associated with encrypting and decrypting longer comments. Additionally, address the absence of fields dedicated to SSN, Credit Card, or Account Numbers in GRM applications.
+
+1. NPI Data in Freeform Text
+Input Handling:
+
+Users can input NPI data along with random text in freeform text fields.
+Encryption:
+
+Encrypt the entire content when storing in the database.
+Decryption:
+
+Decrypt the data during retrieval.
+Considerations:
+
+Recognize the complexity of encrypting and decrypting comments, especially when they can reach up to 4000 characters.
+2. Dedicated Fields for SSN/Credit Card/Account Numbers
+Data Type Restriction:
+
+Although GRM applications don't store SSN, Credit Card, or Account Numbers, if these dedicated fields are introduced in the future, implement encryption and decryption for these specific data types.
+Encryption/Decryption Process:
+
+Encrypt and decrypt SSN, Credit Card, or Account Numbers using standard cryptographic algorithms.
+Benefits and Considerations
+Balancing Security and Complexity:
+
+Encrypting entire freeform text provides security but may introduce complexity for longer comments. However, it remains a viable approach.
+Adaptability for Future Changes:
+
+The plan allows for easy integration of encryption for dedicated fields if GRM applications decide to store SSN, Credit Card, or Account Numbers.
+Efficiency in Current Scenario:
+
+Acknowledging the absence of such data types in the current system, no encryption/decryption processes are applied, ensuring system efficiency.
+Conclusion
+This strategy strikes a balance between securing sensitive data in freeform text fields and minimizing complexity. While recognizing the potential challenges of encrypting longer comments, the plan remains adaptable to future changes, providing a secure and efficient solution for the current state of GRM applications.
