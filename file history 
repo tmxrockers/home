@@ -120,3 +120,84 @@ public class ExcelColumnRemoval {
         }
     }
 }
+
+
+
+
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class ExcelColumnRemoval {
+
+    public static void main(String[] args) {
+        try {
+            // Specify the Excel file path
+            String filePath = "path/to/your/excel/file.xlsx";
+
+            // Load the Excel workbook
+            FileInputStream fileInputStream = new FileInputStream(filePath);
+            Workbook workbook = new XSSFWorkbook(fileInputStream);
+
+            // Specify the sheet index (zero-based) and column header to remove
+            int sheetIndex = 0;
+            String columnHeaderToRemove = "VISA"; // Change this to the header of the column you want to remove
+
+            // Find the column index based on the header value
+            int columnIndexToRemove = findColumnIndex(workbook.getSheetAt(sheetIndex).getRow(0), columnHeaderToRemove);
+
+            if (columnIndexToRemove != -1) {
+                // Iterate through rows and remove the specified column while preserving formatting
+                for (Row row : workbook.getSheetAt(sheetIndex)) {
+                    Cell cellToRemove = row.getCell(columnIndexToRemove);
+                    if (cellToRemove != null) {
+                        row.removeCell(cellToRemove);
+                    }
+                }
+
+                // Shift remaining columns to the left to fill the gap while preserving formatting
+                for (Row row : workbook.getSheetAt(sheetIndex)) {
+                    for (int i = columnIndexToRemove + 1; i < row.getLastCellNum(); i++) {
+                        Cell sourceCell = row.getCell(i);
+                        if (sourceCell != null) {
+                            Cell targetCell = row.createCell(i - 1, sourceCell.getCellType());
+
+                            // Copy value and formatting
+                            targetCell.setCellValue(sourceCell.getStringCellValue()); // You may need to adjust based on cell type
+                            targetCell.setCellStyle(sourceCell.getCellStyle());
+                        }
+                        row.removeCell(sourceCell);
+                    }
+                }
+
+                // Save the modified workbook
+                FileOutputStream fileOutputStream = new FileOutputStream(filePath);
+                workbook.write(fileOutputStream);
+
+                // Close resources
+                fileInputStream.close();
+                fileOutputStream.close();
+                workbook.close();
+
+                System.out.println("Column removed while preserving formatting, and file saved successfully.");
+            } else {
+                System.out.println("Column with header '" + columnHeaderToRemove + "' not found.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static int findColumnIndex(Row headerRow, String columnHeader) {
+        for (Cell cell : headerRow) {
+            if (cell.getStringCellValue().equalsIgnoreCase(columnHeader)) {
+                return cell.getColumnIndex();
+            }
+        }
+        return -1; // Return -1 if the header is not found
+    }
+}
