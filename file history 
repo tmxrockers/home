@@ -1,0 +1,57 @@
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class ExcelColumnRemoval {
+
+    public static void main(String[] args) {
+        try {
+            // Specify the Excel file path
+            String filePath = "path/to/your/excel/file.xlsx";
+
+            // Load the Excel workbook
+            FileInputStream fileInputStream = new FileInputStream(filePath);
+            Workbook workbook = new XSSFWorkbook(fileInputStream);
+
+            // Specify the sheet index (zero-based) and column index to remove
+            int sheetIndex = 0;
+            int columnIndexToRemove = 2; // Change this to the index of the column you want to remove
+
+            // Iterate through rows and remove the specified column
+            for (Row row : workbook.getSheetAt(sheetIndex)) {
+                Cell cellToRemove = row.getCell(columnIndexToRemove);
+                if (cellToRemove != null) {
+                    row.removeCell(cellToRemove);
+                }
+            }
+
+            // Shift remaining columns to the left to fill the gap
+            for (Row row : workbook.getSheetAt(sheetIndex)) {
+                for (int i = columnIndexToRemove + 1; i < row.getLastCellNum(); i++) {
+                    Cell sourceCell = row.getCell(i);
+                    if (sourceCell != null) {
+                        Cell targetCell = row.createCell(i - 1, sourceCell.getCellType());
+                        targetCell.setCellValue(sourceCell.getStringCellValue()); // You may need to adjust based on cell type
+                    }
+                    row.removeCell(sourceCell);
+                }
+            }
+
+            // Save the modified workbook
+            FileOutputStream fileOutputStream = new FileOutputStream(filePath);
+            workbook.write(fileOutputStream);
+
+            // Close resources
+            fileInputStream.close();
+            fileOutputStream.close();
+            workbook.close();
+
+            System.out.println("Column removed and file saved successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
