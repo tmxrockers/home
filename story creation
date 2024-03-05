@@ -1,0 +1,96 @@
+I will give prompt and act as product owner who write the business story in the jira for the GRM(Global Resource Management) project
+ChatGPT
+Certainly! Please provide me with the prompt or details for the GRM (Global Resource Management) project, and I'll help you draft a business story for Jira.
+
+In our project we have We have SP( Strategic Partner) and ITCL work flow in Alteryx ETL. In the database we are storing 11 different types related to VISA fields but in the audit or policies we should not hold the visa fields in the system for that we need to clean up the data from following system for that give me the business stories
+
+1. SP Incremental workflow ETL 
+2. SP Universal Set - Governance Summary
+3. SP Headcount - Monthly
+4. SP Headcount - Weekly
+5. SP Universal Set - VU Point
+ChatGPT
+1. SP Incremental Workflow ETL:
+
+As a user, I want to implement a data cleanup process in the SP Incremental Workflow ETL to remove all VISA-related fields from the database, ensuring compliance with audit and policy requirements. This will involve modifying the ETL workflow to exclude and cleanse these fields during data extraction, transformation, and loading.
+
+2. SP Universal Set - Governance Summary:
+
+In the SP Universal Set - Governance Summary, the user story involves enhancing the data governance by excluding VISA fields. The task is to update the summary generation process, ensuring it doesn't include any VISA-related information. This ensures that the governance summary reflects accurate and policy-compliant data.
+
+3. SP Headcount - Monthly:
+
+For the SP Headcount - Monthly report, the business story entails refining the data to comply with audit and policy regulations. This involves modifying the monthly headcount generation process to exclude VISA-related fields, ensuring that the generated report only contains sanitized information.
+
+4. SP Headcount - Weekly:
+
+Similar to the monthly headcount report, the SP Headcount - Weekly user story involves adjusting the weekly headcount generation process. The goal is to remove any VISA-related fields during data processing, guaranteeing that the weekly report adheres to audit and policy requirements.
+
+5. SP Universal Set - VU Point:
+
+In the SP Universal Set - VU Point, the business story focuses on maintaining data integrity and compliance. This entails modifying the VU Point generation process to exclude VISA-related fields, ensuring that the VU Point dataset aligns with audit and policy guidelines.
+
+These business stories collectively contribute to the data cleanup initiative across different workflows, promoting compliance and adherence to audit and policy standards in the GRM project.
+
+Give me the acceptance criteria as well as description and title for the stories above 
+ChatGPT
+1. SP Incremental Workflow ETL:
+
+Title: Data Cleanup in SP Incremental Workflow ETL
+
+Description: Update the SP Incremental Workflow ETL process to exclude and cleanse VISA-related fields from the database, ensuring compliance with audit and policy standards during data extraction, transformation, and loading.
+
+Acceptance Criteria:
+
+VISA fields are identified within the dataset.
+ETL workflow is modified to exclude VISA-related fields during data extraction.
+Cleansing mechanisms are implemented to sanitize any existing VISA data.
+Successfully tested to ensure the modified ETL process maintains data integrity.
+2. SP Universal Set - Governance Summary:
+
+Title: Enhance Data Governance in SP Universal Set - Governance Summary
+
+Description: Refine the SP Universal Set - Governance Summary generation process to exclude VISA-related fields, aligning the summary with audit and policy standards for accurate data governance.
+
+Acceptance Criteria:
+
+Identification of VISA-related fields within the data set.
+Update summary generation to exclude VISA fields.
+Verify that the generated summary reflects accurate and policy-compliant information.
+Successful testing to confirm the modified process maintains data quality.
+3. SP Headcount - Monthly:
+
+Title: Monthly Headcount Data Cleanup
+
+Description: Modify the SP Headcount - Monthly report generation process to exclude VISA-related fields, ensuring the monthly report adheres to audit and policy standards.
+
+Acceptance Criteria:
+
+Identification and documentation of VISA fields within the dataset.
+Adjust the monthly headcount generation process to exclude VISA-related data.
+Validate that the generated report only contains sanitized information.
+Conduct successful testing to confirm compliance with audit and policy guidelines.
+4. SP Headcount - Weekly:
+
+Title: Weekly Headcount Data Cleanup
+
+Description: Adjust the SP Headcount - Weekly report generation process to exclude VISA-related fields, ensuring the weekly report complies with audit and policy requirements.
+
+Acceptance Criteria:
+
+Identify VISA-related fields within the dataset.
+Modify the weekly headcount generation process to exclude VISA-related data.
+Ensure the generated report only includes sanitized information.
+Successful testing to validate compliance with audit and policy standards.
+5. SP Universal Set - VU Point:
+
+Title: Data Integrity in SP Universal Set - VU Point
+
+Description: Modify the SP Universal Set - VU Point generation process to exclude VISA-related fields, maintaining data integrity and compliance with audit and policy guidelines.
+
+Acceptance Criteria:
+
+Identification of VISA fields within the VU Point dataset.
+Update the VU Point generation process to exclude VISA-related data.
+Verify that the generated VU Point dataset aligns with audit and policy standards.
+Conduct successful testing to ensure data integrity is maintained post-modification.
