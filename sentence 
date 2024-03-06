@@ -1,0 +1,50 @@
+import opennlp.tools.sentdetect.SentenceDetectorME;
+import opennlp.tools.sentdetect.SentenceModel;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+public class SentenceMatchingExample {
+
+    public static void main(String[] args) {
+        try {
+            // Load the default sentence model
+            InputStream modelIn = SentenceMatchingExample.class.getClassLoader().getResourceAsStream("opennlp/en-sent.bin");
+            SentenceModel model = new SentenceModel(modelIn);
+            SentenceDetectorME sentenceDetector = new SentenceDetectorME(model);
+
+            // Example sentences
+            String sentence1 = "This is a sample sentence.";
+            String sentence2 = "A different sentence with slight variations.";
+
+            // Tokenize and compare sentences
+            String[] tokens1 = sentenceDetector.sentDetect(sentence1);
+            String[] tokens2 = sentenceDetector.sentDetect(sentence2);
+
+            // Broad match - simple example: matching if at least one token is common
+            boolean isMatch = hasCommonToken(tokens1, tokens2);
+
+            // Display the result
+            System.out.println("Sentence 1: " + sentence1);
+            System.out.println("Sentence 2: " + sentence2);
+            System.out.println("Broad Match: " + isMatch);
+
+            // Close the model input stream
+            modelIn.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static boolean hasCommonToken(String[] tokens1, String[] tokens2) {
+        for (String token1 : tokens1) {
+            for (String token2 : tokens2) {
+                if (token1.equalsIgnoreCase(token2)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}
