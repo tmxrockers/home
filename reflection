@@ -1,0 +1,30 @@
+import java.lang.reflect.Field;
+
+public class EntityUtil {
+
+    public static <T> void setDynamicValues(T entity, String tableName, Object additionalValue1, Object additionalValue2) {
+        try {
+            // Get all fields of the entity class
+            Field[] fields = entity.getClass().getDeclaredFields();
+            
+            // Loop through each field
+            for (Field field : fields) {
+                field.setAccessible(true);
+                
+                // Check if the field name matches the common columns
+                if (field.getName().equals("commonColumn1") || field.getName().equals("commonColumn2")) {
+                    // Set value for common columns
+                    field.set(entity, /* set your common column value here */);
+                } else if (field.getName().equals("additionalColumn1")) {
+                    // Set value for additional column 1
+                    field.set(entity, additionalValue1);
+                } else if (field.getName().equals("additionalColumn2")) {
+                    // Set value for additional column 2
+                    field.set(entity, additionalValue2);
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+}
