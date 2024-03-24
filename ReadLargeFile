@@ -1,0 +1,159 @@
+package com.monitorjbl.xlsx;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+
+public class ReadLargeFile {
+
+	public static void main(String[] args) {
+		Map<Long, List<Cell>> rowListMap = new HashMap<>();
+		try (InputStream inputStream = new FileInputStream(new File("D://file1.xlsx"))) {
+			Workbook workbook = StreamingReader.builder().rowCacheSize(10000).bufferSize(8192).open(inputStream);
+
+			// Collect cell data into the rowListMap
+			collectCellData(workbook, rowListMap);
+
+			List<String> columnsToRemove = new ArrayList<>();
+			columnsToRemove.add("Site Name");
+			columnsToRemove.add("Site ID");
+
+			// Perform operations on the collected cell data
+			removeColumnsByHeader(rowListMap, columnsToRemove);
+
+			// Export modified Excel file
+			String outputFilePath = "D://modified_file2.xlsx";
+			exportModifiedExcel(rowListMap, outputFilePath);
+
+			System.out.println("Modified Excel file exported to: " + outputFilePath);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void collectCellData(Workbook workbook, Map<Long, List<Cell>> rowListMap) {
+		for (Sheet sheet : workbook) {
+			Long rowIndex = 0L;
+			for (Row row : sheet) {
+				final Long index = rowIndex;
+				System.out.println("Reading Row Index: " + index); // Print the row index
+				List<Cell> cellList = new ArrayList<>();
+				for (Cell cell : row) {
+					cellList.add(cell);
+				}
+				rowListMap.put(index, cellList);
+				rowIndex++;
+			}
+		}
+	}
+
+	private static void removeColumnsByHeader(Map<Long, List<Cell>> rowListMap, List<String> removeColumnList) {
+		// Identify column indices of specified header columns
+		List<Integer> columnsToRemove = identifyColumnsToRemove(rowListMap, removeColumnList);
+
+		// Reverse the order of columns to remove
+		Collections.sort(columnsToRemove, Collections.reverseOrder());
+
+		// Iterate over rows to remove specified columns
+		for (List<Cell> cellList : rowListMap.values()) {
+			for (int columnIndex : columnsToRemove) {
+				if (cellList.size() > columnIndex) {
+					cellList.remove(columnIndex);
+				}
+			}
+		}
+	}
+
+	private static List<Integer> identifyColumnsToRemove(Map<Long, List<Cell>> rowListMap,
+			List<String> removeCloumnList) {
+		List<Integer> columnsToRemove = new ArrayList<>();
+		if (!rowListMap.isEmpty()) {
+			List<Cell> firstRow = rowListMap.get(0L); // Assuming the header row is the first row
+			if (firstRow != null) {
+				for (int i = 0; i < firstRow.size(); i++) {
+					Cell cell = firstRow.get(i);
+					if (cell != null) {
+						String cellValue = cell.getStringCellValue().trim();
+						boolean containsSearchStr = removeCloumnList.stream().anyMatch(cellValue::equalsIgnoreCase);
+						if (containsSearchStr) {
+							columnsToRemove.add(i);
+						}
+					}
+				}
+			}
+		}
+		return columnsToRemove;
+	}
+
+	private static void exportModifiedExcel(Map<Long, List<Cell>> rowListMap, String outputFilePath)
+			throws IOException {
+		try (SXSSFWorkbook workbook = new SXSSFWorkbook()) {
+			CellStyle[] stylesCache = new CellStyle[workbook.getNumCellStyles()]; // Cache for cell styles
+			Sheet sheet = workbook.createSheet();
+			for (Map.Entry<Long, List<Cell>> entry : rowListMap.entrySet()) {
+				Long rowIndex = entry.getKey();
+				List<Cell> cellList = entry.getValue();
+				Row row = sheet.createRow(rowIndex.intValue());
+				System.out.println("Writing Row Index: " + rowIndex); // Print the row index
+
+				for (int i = 0; i < cellList.size(); i++) {
+					Cell cell = row.createCell(i);
+					Cell sourceCell = cellList.get(i);
+					if (sourceCell != null) {
+						// Copy cell value
+						switch (sourceCell.getCellType()) {
+						case BOOLEAN:
+							cell.setCellValue(sourceCell.getBooleanCellValue());
+							break;
+						case NUMERIC:
+							cell.setCellValue(sourceCell.getNumericCellValue());
+							break;
+						case STRING:
+							cell.setCellValue(sourceCell.getStringCellValue());
+							break;
+						case FORMULA:
+							cell.setCellFormula(sourceCell.getCellFormula());
+							break;
+						case BLANK:
+							// Do nothing
+							break;
+						default:
+							// Do nothing
+							break;
+						}
+						// Copy cell style
+						CellStyle sourceCellStyle = sourceCell.getCellStyle();
+						if (stylesCache[sourceCellStyle.getIndex()] == null) {
+							// Create a new style and cache it
+							CellStyle newCellStyle = workbook.createCellStyle();
+							newCellStyle.cloneStyleFrom(sourceCellStyle);
+							stylesCache[sourceCellStyle.getIndex()] = newCellStyle;
+						}
+						cell.setCellStyle(stylesCache[sourceCellStyle.getIndex()]);
+					}
+				}
+			}
+			try (OutputStream outputStream = new FileOutputStream(outputFilePath)) {
+				workbook.write(outputStream);
+				workbook.dispose();
+			}
+		}
+	}
+
+}
