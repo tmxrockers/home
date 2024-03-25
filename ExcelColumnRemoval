@@ -1,0 +1,121 @@
+package springbootoracledatabase.controller;
+
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellUtil;
+import org.apache.poi.xssf.streaming.*;
+import com.github.pjfanning.xlsx.StreamingReader;
+
+public class ExcelColumnRemoval {
+
+	public static void main(String[] args) {
+		String filePath = "D://file2.xlsx";
+
+		// Define columns to remove
+		List<String> columnsToRemove = Arrays.asList("Site Name", "Site ID", "Product Sales", "Product Code");
+		updateNasDirectoryFiles(filePath, columnsToRemove);
+	}
+
+	private static void updateNasDirectoryFiles(String filePath, List<String> columnsToRemove) {
+		try {
+			// Read the first row cells from the input Excel file
+			List<Cell> firstRowCells = readFirstRowCells(filePath);
+
+			// Identify columns to remove based on their header names
+			List<Integer> columnsToRemoveIndices = identifyColumnsToRemove(firstRowCells, columnsToRemove);
+
+			// Reverse the order of columns to remove
+			Collections.sort(columnsToRemoveIndices, Collections.reverseOrder());
+
+			// Copy input Excel file to SXSSFWorkbook while skipping specified columns
+			String outputFilePath = filePath;
+			try (InputStream inputStream = new FileInputStream(new File("D://file2.xlsx"))) {
+				SXSSFWorkbook sxssfWorkbook = copyToSXSSF(inputStream, columnsToRemoveIndices);
+				try (OutputStream outputStream = new FileOutputStream(outputFilePath)) {
+					sxssfWorkbook.write(outputStream);
+					sxssfWorkbook.dispose();
+					outputStream.close();
+				}
+				inputStream.close();
+			}
+
+			System.out.println("Modified Excel file exported to: " + outputFilePath);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static List<Cell> readFirstRowCells(String filePath) throws IOException {
+		List<Cell> firstRowCells = new ArrayList<>();
+		try (InputStream inputStream = new FileInputStream(new File(filePath))) {
+			Workbook workbook = StreamingReader.builder().rowCacheSize(1000).bufferSize(4096).open(inputStream);
+			for (Sheet sheet : workbook) {
+				for (Row row : sheet) {
+					for (Cell cell : row) {
+						firstRowCells.add(cell);
+					}
+					break;
+				}
+			}
+
+			workbook.close();
+			inputStream.close();
+		}
+		return firstRowCells;
+	}
+
+	private static List<Integer> identifyColumnsToRemove(List<Cell> firstRowCells, List<String> columnsToRemove) {
+		List<Integer> columnsToRemoveIndices = new ArrayList<>();
+		for (int i = 0; i < firstRowCells.size(); i++) {
+			Cell cell = firstRowCells.get(i);
+			if (cell != null) {
+				String cellValue = cell.getStringCellValue().trim();
+				if (columnsToRemove.contains(cellValue)) {
+					columnsToRemoveIndices.add(i);
+				}
+			}
+		}
+		return columnsToRemoveIndices;
+	}
+
+	private static SXSSFWorkbook copyToSXSSF(InputStream inputStream, List<Integer> columnsToRemoveIndices)
+			throws Exception {
+		SXSSFWorkbook sxssfWorkbook = new SXSSFWorkbook(5);
+		try (Workbook wbInput = StreamingReader.builder().setReadHyperlinks(true).open(inputStream)) {
+			final CellCopyPolicy cellCopyPolicy = new CellCopyPolicy();
+			cellCopyPolicy.setCopyHyperlink(false);
+			final CellCopyContext cellCopyContext = new CellCopyContext();
+			for (Sheet sheetInput : wbInput) {
+				SXSSFSheet sheetOutput = sxssfWorkbook.createSheet(sheetInput.getSheetName());
+				for (Row rowInput : sheetInput) {
+					SXSSFRow rowOutput = sheetOutput.createRow(rowInput.getRowNum());
+					AtomicInteger columnIndex = new AtomicInteger();
+					for (Cell cellInput : rowInput) {
+						int index = columnIndex.getAndIncrement();
+						if (!columnsToRemoveIndices.contains(index)) {
+							SXSSFCell cellOutput = rowOutput.createCell(
+									cellInput.getColumnIndex() - countSkippedColumns(columnsToRemoveIndices, index));
+							CellUtil.copyCell(cellInput, cellOutput, cellCopyPolicy, cellCopyContext);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			sxssfWorkbook.dispose();
+			throw e;
+		}
+		return sxssfWorkbook;
+	}
+
+	private static int countSkippedColumns(List<Integer> columnsToRemoveIndices, int index) {
+		int count = 0;
+		for (int columnIndex : columnsToRemoveIndices) {
+			if (columnIndex < index) {
+				count++;
+			}
+		}
+		return count;
+	}
+}
