@@ -1,0 +1,144 @@
+import { Injectable } from '@angular/core';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { AuthGuardService } from './auth.guard.service';
+
+@Injectable()
+export class HttpConfigInterceptor implements HttpInterceptor {
+  constructor(private authGuard: AuthGuardService) {}
+
+  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+    request = this.addHeaders(request);
+
+    return next.handle(request).pipe(
+      map((event: HttpEvent<any>) => {
+        if (event instanceof HttpResponse) {
+          // Do nothing or handle the response as needed
+        }
+        return event;
+      }),
+      catchError((error: HttpErrorResponse) => {
+        let data = {
+          reason: error && error.error.reason ? error.error.reason : '',
+          status: error.status
+        };
+
+        if (error.status === 401 && request.withCredentials) {
+          return this.authGuard.callTokenAPI().pipe(
+            switchMap((response) => {
+              if (response) {
+                request = this.addHeaders(request, true);
+              }
+              return next.handle(request);
+            })
+          );
+        } else {
+          return throwError(error);
+        }
+      })
+    );
+  }
+
+  private addHeaders(request: HttpRequest<any>, refreshToken: boolean = false): HttpRequest<any> {
+    const userInfo = sessionStorage.getItem('loggedInUserDetails');
+    const userInfoObj = userInfo ? JSON.parse(userInfo) : null;
+
+    if (userInfoObj) {
+      let encodedString = btoa(userInfoObj.roleAuth);
+      if (!request.withCredentials) {
+        request = request.clone({ headers: request.headers.set('Authorization', 'Basic ' + encodedString) });
+      }
+      if (request.withCredentials || refreshToken) {
+        request = request.clone({ headers: request.headers.set('Authorization', sessionStorage.getItem('token')) });
+      }
+      request = request.clone({
+        headers: request.headers.set('Cache-Control', 'no-cache').set('Pragma', 'no-cache')
+      });
+
+      if (!request.headers.has('userId')) {
+        request = request.clone({ headers: request.headers.set('userId', userInfoObj.id) });
+      }
+
+      if (!request.headers.has('Access-Control-Allow-Origin')) {
+        request = request.clone({ headers: request.headers.set('Access-Control-Allow-Origin', '*') });
+      }
+    }
+
+    return request;
+  }
+}
+
+
+
+
+
+
+
+import { Injectable, NgZone } from '@angular/core';
+import { Observable, Subscriber } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpErrorResponse, HttpRequest } from '@angular/common/http';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class EventSourceService {
+  private eventSource: EventSource;
+
+  constructor(private zone: NgZone, private http: HttpClient) {}
+
+  private addHeaders(headers: HttpHeaders): HttpHeaders {
+    const userInfo = sessionStorage.getItem('loggedInUserDetails');
+    const userInfoObj = userInfo ? JSON.parse(userInfo) : null;
+
+    if (userInfoObj) {
+      let encodedString = btoa(userInfoObj.roleAuth);
+      headers = headers.set('Authorization', 'Basic ' + encodedString);
+
+      headers = headers.set('Authorization', sessionStorage.getItem('token'));
+      headers = headers.set('Cache-Control', 'no-cache').set('Pragma', 'no-cache');
+
+      headers = headers.set('userId', userInfoObj.id);
+      headers = headers.set('Access-Control-Allow-Origin', '*');
+    }
+
+    return headers;
+  }
+
+  getEventSource(url: string, options: EventSourceInit): EventSource {
+    return new EventSource(url, options);
+  }
+
+  connectToServerSentEvents(url: string, options: EventSourceInit, eventNames: string[] = []): Observable<Event> {
+    let headers = new HttpHeaders();
+    headers = this.addHeaders(headers);
+
+    return new Observable((subscriber: Subscriber<Event>) => {
+      this.http.get(url, { headers, responseType: 'text' }).subscribe(response => {
+        this.eventSource = new EventSource(url, options);
+
+        this.eventSource.onerror = (error: any) => {
+          this.zone.run(() => subscriber.error(error));
+        };
+
+        eventNames.forEach((event: string) => {
+          this.eventSource.addEventListener(event, (data: any) => {
+            this.zone.run(() => subscriber.next(data));
+          });
+        });
+      }, (error: HttpErrorResponse) => {
+        this.zone.run(() => subscriber.error(error));
+      });
+    });
+  }
+
+  close(): void {
+    if (!this.eventSource) {
+      return;
+    }
+
+    this.eventSource.close();
+    this.eventSource = null;
+  }
+}
+
