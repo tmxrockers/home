@@ -1,0 +1,8 @@
+The proposed ETL workflow design offers a comprehensive solution to automate hierarchy updates for SP/ITCL data within the Universal Set table. This automation will eliminate the need for manual intervention, ensuring timely reflection of hierarchy changes and improved data consistency across reports and data views.
+
+Key Benefits
+
+Reduced Manual Effort: Automates hierarchy updates, freeing up personnel for other tasks.
+Improved Data Accuracy: Ensures that reports and data views leverage the latest hierarchy information.
+Enhanced Data Consistency: Eliminates inconsistencies arising from outdated snapshots.
+Streamlined Data Governance: Maintains the current behavior of the incremental table for data governance UI purposes.
