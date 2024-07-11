@@ -1,0 +1,162 @@
+Open sidebar
+ChatGPT
+
+Give me the advantage and disadvantage 
+
+10.2 Blocker Validation to Handle missing hierarchy in the F29.
+
+Description:
+
+Blocker validation will be thrown during initial phase of workflow execution when there is a new Hierarchy is coming in the incremental file which is not available in F29 reference table. Same needs to
+
+be applied for both SP and ITCL Workflow.
+
+Approach To Fix the Gap
+
+We will
+
+be raising the blocker error if the hierarch is not available in F29 which is present in the source
+
+file, and this will help us to stop the processing of the source data.
+ChatGPT
+Advantages
+Prevents Data Inconsistency:
+
+Ensuring that the new hierarchy present in the incremental file is checked against the F29 reference table prevents processing incomplete or incorrect data, maintaining data integrity.
+Early Detection of Issues:
+
+The validation is performed during the initial phase of the workflow, allowing for early detection of hierarchy issues. This proactive approach minimizes downstream processing errors and the associated costs of reprocessing data.
+Standardization and Compliance:
+
+By enforcing the presence of hierarchy in the F29 reference table, the system maintains standardization and compliance with predefined data structures and business rules.
+Reduces Error Propagation:
+
+By stopping the process early, it prevents errors from propagating through the workflow, which could lead to more complex and harder-to-trace issues later in the process.
+Disadvantages
+Increased Initial Processing Time:
+
+Implementing the blocker validation might increase the initial processing time due to the additional check against the F29 reference table. This could be a concern in time-sensitive operations.
+Potential for Workflow Interruptions:
+
+If the hierarchy is frequently missing or incorrectly configured, the workflow could be frequently interrupted, leading to delays and possibly impacting overall system performance.
+Dependency on F29 Accuracy:
+
+The effectiveness of this validation is heavily dependent on the accuracy and completeness of the F29 reference table. Any issues with the reference table itself could lead to false positives, unnecessarily blocking valid data.
+Additional Maintenance Overhead:
+
+Maintaining the blocker validation logic and ensuring the F29 reference table is up-to-date adds to the maintenance overhead. It requires regular updates and checks to ensure the validation process remains accurate and effective.
+Conclusion
+Implementing blocker validation to handle missing hierarchy in the F29 during the initial phase of workflow execution has significant advantages in maintaining data integrity and early error detection. However, it also introduces potential challenges, including increased processing time, potential workflow interruptions, and additional maintenance overhead. Balancing these factors is crucial for optimizing the system's overall efficiency and reliability.
+
+
+
+
+
+Give me the below things some understandable manner
+
+
+10. F29 Hierarchy Error Population:
+
+We have come up with two different approaches on F29 data addition validation.
+
+10.1 ITCL Monthly/Weekly Snapshot Hierarchy Error Population (Prod Defect)
+
+Description:
+
+While generating ITCL Monthly/Weekly snapshot, error raised by ETL is not flowing into governance screen. So, data loaders fail to update F29. The following document will help to fix the gap, so that data loaders will be prompted to update F29 reference table as in SP data set.
+
+(Note: The gap in existing flow is only on ITCL Monthly/Weekly dataset SP dataset abides
+
+with Hierarchy error population)
+
+Gap In Existing Flow:
+
+The following criteria is considered for data accumulation for Snapshots from ITCL Universal set.
+
+Whenever F29 is ngt updated, hierarchy values will be null. Since In scope value with hierarchy fields, the value of in scope is also null.
+
+population logic intertwined Accordingly Mandatory Error is raised by ETL for all the respective fields in Universal set. Since the snapshot criteria on In scope are failing, the error data raised by ETL is not flowing into governance screen. So that data loaders are not prompted to update F29. As CIO group is null and the following fields 'Resource Location', 'Vendor Group', 'In
+
+scope' in ITCL Universal set will be updated as blank. & null, so that data will flow into snapshot screen
+
+Approach To Fix the Gap:
+
+We d can have in scope criteria as "Yes" and there by error will be prompted for data loaders. Once the error is rectified, the rectified data in staging table will be filtered for in scope value "Yes" and delivered to main table (Monthly/Weekly).
+
+Estimation:
+
+Service Fix Estimate for Snapshot Generation: 6 Testing Estimate for Snapshot Generation:
+
+Total: 10
+ChatGPT
+F29 Hierarchy Error Population
+We've devised two approaches to handle F29 data addition validation.
+
+10.1 ITCL Monthly/Weekly Snapshot Hierarchy Error Population (Production Defect)
+Description:
+
+While generating ITCL Monthly/Weekly snapshots, errors raised by the ETL process are not being displayed on the governance screen, causing data loaders to fail in updating the F29 reference table. This document outlines a solution to address this issue and ensure that data loaders are prompted to update the F29 reference table, similar to the SP dataset.
+
+(Note: The existing issue is only present in the ITCL Monthly/Weekly dataset. The SP dataset already adheres to hierarchy error population.)
+
+Gap in Existing Flow:
+
+For snapshot data accumulation from the ITCL Universal set, if the F29 is not updated, hierarchy values become null.
+The "In scope" value, dependent on hierarchy fields, also becomes null.
+Mandatory errors are raised by the ETL for the respective fields in the Universal set.
+These errors prevent the snapshot criteria based on "In scope" from working correctly.
+As a result, the error data raised by ETL does not appear on the governance screen, failing to prompt data loaders to update the F29.
+This leads to fields like 'Resource Location', 'Vendor Group', and 'In scope' in the ITCL Universal set being updated as blank or null, which then flows into the snapshot screen.
+Approach to Fix the Gap:
+
+Set the "In scope" criteria to "Yes" to ensure errors are raised correctly.
+Once the error is rectified, filter the rectified data in the staging table for the "In scope" value "Yes".
+Deliver the filtered data to the main table for Monthly/Weekly snapshots.
+Estimation:
+
+Service Fix Estimate for Snapshot Generation: 6 hours
+Testing Estimate for Snapshot Generation: 4 hours
+Total: 10 hours
+
+
+
+
+Give me some more way easily understandable in layman term
+ChatGPT
+F29 Hierarchy Error Population
+We've come up with two ways to handle issues with F29 data validation.
+
+10.1 ITCL Monthly/Weekly Snapshot Hierarchy Error Population (Production Defect)
+What's the problem?
+
+When we create ITCL Monthly/Weekly snapshots, errors found by the data processing tool (ETL) aren't showing up on the governance screen. This means the data loaders don't know they need to update the F29 reference table, causing problems.
+
+Current Flow Issues:
+
+When the F29 table isn’t updated, the hierarchy values (which should be there) are missing.
+This also causes the "In scope" value (which depends on these hierarchies) to be missing.
+The ETL tool raises errors because these required fields are missing.
+However, these errors don't show up on the governance screen, so data loaders aren't alerted to fix them.
+This leads to important fields like 'Resource Location', 'Vendor Group', and 'In scope' being left blank or null in the ITCL data, and these errors then move into the snapshot data.
+How to Fix It:
+
+Set the "In scope" value to "Yes": This will ensure that errors are correctly flagged.
+Fix the Errors: Once data loaders see the errors, they can update the F29 table to fix them.
+Filter and Deliver the Data: After fixing the errors, only the corrected data (with "In scope" set to "Yes") will be moved from the staging area to the main table for the Monthly/Weekly snapshots.
+Time Estimates:
+
+Service Fix for Snapshot Generation: 6 hours
+Testing the Fix: 4 hours
+Total: 10 hours
+By following this approach, we ensure that errors are caught early, data loaders are alerted to update the F29 reference table, and the snapshots are accurate and complete.
+
+
+
+
+
+
+
+
+Message ChatGPT
+
+ChatGPT can make mistakes. Check important info.
