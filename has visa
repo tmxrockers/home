@@ -275,3 +275,11 @@ To correct the handling of the "Has Visa" column for historic records and ensure
 ---
 
 This document outlines the root cause of the issue, the problem statement, and a detailed proposal for the solution to ensure accurate "Has Visa" information in the GRM monthly metrics dashboard. Implementing these changes will correct the ETL workflow and improve data integrity.
+
+
+
+We've identified an issue in the GRM dashboard where historic records in the "Has Visa" column are incorrectly set to a hyphen. Here is our proposed solution:
+
+Use the SP Universal Set table to verify and update historic records.
+Implement a one-time sync from the Visa Master source file.
+Ensure future ETL processes handle "Has Visa" data accurately.
