@@ -1,0 +1,277 @@
+## Document for GRM Monthly Metrics Dashboard Production Issue
+
+**Issue:** The "Has Visa" column in the GRM monthly metrics dashboard is being populated with hyphens for all records due to a production issue.
+
+**Current Process:**
+
+1. SP & ITCL incremental ETL workflow populates the "Has Visa" column with hyphens for all incremental records.
+2. Daily visa spring job updates the "Has Visa" column with GRM staffing end data. (This works fine for new records)
+3. Historic records (baseline refresh) coming in the incremental load are updated with hyphens in ETL, causing inaccurate data.
+
+**Proposed Solution:**
+
+1. **One-time Full Sync:** Trigger the Visa Master sync job to update all historic records with data from the visa master source file. (This populates the Universal Set table)
+2. **ETL Update:** Modify the SP ETL process to identify records using the SP Universal Set table before updating the "Has Visa" column.
+    - If a record exists in the Universal Set table, use the existing value for "Has Visa".
+    - If a record doesn't exist in the Universal Set table, update "Has Visa" with a hyphen as usual.
+
+**Reasoning:**
+
+- The one-time full sync ensures accurate data for historic records.
+- The ETL update ensures accurate data for future incremental loads for SP.
+- ITCL data is already populated correctly from the source file and doesn't require changes.
+
+**Implementation Steps:**
+
+1. Trigger the one-time Visa Master sync job.
+2. Update the SP ETL process to use the SP Universal Set table for "Has Visa" population.
+3. Test the updated ETL process thoroughly.
+4. Deploy the changes to production.
+
+**Benefits:**
+
+- This solution resolves the issue of inaccurate "Has Visa" data in the GRM monthly metrics dashboard.
+- It ensures accurate data for both historic and future records for SP.
+
+**Additional Notes:**
+
+- This solution focuses on SP as ITCL data is already handled correctly.
+- Document the changes made to the ETL process for future reference.
+
+
+
+
+
+
+## Detailed Analysis of GRM Monthly Metrics Dashboard "Has Visa" Issue
+
+**Problem Statement:**
+
+* The GRM monthly metrics dashboard "Has Visa" column is displaying hyphens (-) for all records.
+* This is a production issue causing inaccurate data representation.
+
+**Step-by-Step Breakdown:**
+
+1. **Incremental ETL Workflow:**
+    - The ETL process for SP & ITCL data populates the "Has Visa" column with hyphens for all incremental records (newly added or updated).
+2. **Daily Visa Spring Job:**
+    - This job functions correctly for new records, updating the "Has Visa" column with data from GRM staffing.
+3. **Historic Record Issue:**
+    - During the baseline refresh (historic data load) processed in the incremental ETL, all "Has Visa" values are incorrectly populated with hyphens.
+
+**Root Cause:**
+
+The issue arises because the ETL process prioritizes updating "Has Visa" with a hyphen for any record not explicitly defined in the system. This behavior applies to both new and historic records during the incremental load.
+
+**Proposed Solution:**
+
+1. **One-Time Full Sync:**
+    - Run the Visa Master sync job as a one-time activity. This job retrieves data from the visa master source file and populates the "Has Visa" column for all records (including historic ones) in the Universal Set table.
+2. **ETL Process Update:**
+    - Modify the SP ETL process to check the SP Universal Set table before updating the "Has Visa" column for SP data.
+        - If a record exists in the Universal Set table:
+            - Use the existing value stored for "Has Visa" in the Universal Set table.
+        - If a record doesn't exist in the Universal Set table:
+            - Update "Has Visa" with a hyphen (-) as per the current behavior.
+
+**Benefits of the Solution:**
+
+- **Accurate Historic Data:** The one-time full sync ensures accurate "Has Visa" data for all historic records in the GRM dashboard.
+- **Correct Future Updates:** The updated ETL process guarantees accurate "Has Visa" information for future incremental loads for SP data.
+- **ITCL Unaffected:** The proposed solution focuses on SP as ITCL data already receives "Has Visa" information directly from the source file.
+
+**Additional Notes:**
+
+- Document the changes made to the ETL process for future reference.
+- Conduct thorough testing of the updated ETL process before deploying it to production.
+
+**Implementation Steps:**
+
+1. **Trigger One-Time Full Sync:**
+    - Initiate the Visa Master sync job to populate the Universal Set table with historic visa data.
+2. **Update SP ETL Process:**
+    - Modify the SP ETL code to check the SP Universal Set table before updating the "Has Visa" column.
+    - Implement logic to use the existing value from the Universal Set table if a record exists.
+3. **ETL Testing:**
+    - Conduct rigorous testing of the updated ETL process to ensure proper functionality.
+4. **Production Deployment:**
+    - Deploy the updated ETL process to the production environment after successful testing.
+
+This detailed analysis provides a clear understanding of the GRM dashboard issue, its root cause, and a proposed solution with implementation steps. Following these steps will resolve the data inaccuracy and ensure a reliable "Has Visa" representation for both historic and future records.
+
+
+
+
+### Problem Statement
+
+#### Background
+A production issue has been identified in the Global Resource Management (GRM) monthly metrics dashboard. This issue pertains to the "Has Visa" column in the ETL (Extract, Transform, Load) workflow for both SP and ITCL systems.
+
+#### Issue Description
+1. **Incremental Records Handling**:
+    - For all incremental records, the "Has Visa" column is currently populated with a hyphen ("-") during the ETL process.
+    - A daily visa spring job updates this "Has Visa" column based on the GRM staffing end.
+
+2. **Historic Records Issue**:
+    - For historic records, all "Has Visa" column values are also being updated to a hyphen due to baseline refresh in the incremental load.
+    - This causes inaccuracies in the dashboard as the ETL updates these historic records with a hyphen, which should not happen.
+
+3. **Impact**:
+    - This issue affects the accuracy of the "Has Visa" information for historic records, leading to incorrect data representation in the GRM monthly metrics dashboard.
+
+### Proposal Document
+
+#### Objectives
+- To correct the handling of the "Has Visa" column in the ETL workflow.
+- To ensure that historic records are not incorrectly updated with a hyphen.
+- To maintain accurate data representation in the GRM monthly metrics dashboard.
+
+#### Proposed Solution
+
+1. **Identify Record Set**:
+    - Utilize the SP Universal Set table to identify if a record already exists in the Universal Set.
+    - If the record exists, update the "Has Visa" column with the respective value from the Universal Set rather than setting it to a hyphen.
+
+2. **One-Time Visa Master Sync Job**:
+    - Trigger a one-time Visa Master sync job to update all historic records from the Visa Master source file.
+    - This will ensure that the historic records are correctly updated before any incremental load is processed.
+
+3. **ETL Workflow Changes**:
+    - Modify the ETL workflow to properly handle the "Has Visa" column for historic records.
+    - Ensure that incremental records are checked against the SP Universal Set table and updated with the correct value.
+
+4. **Incremental Run Adjustments**:
+    - For SP, the changes will be applied as described.
+    - For ITCL, no changes are needed since the "Has Visa" value is already present in the source file.
+
+#### Implementation Steps
+1. **Analysis and Planning**:
+    - Conduct a detailed analysis of the current ETL workflow.
+    - Plan the necessary changes to the ETL process.
+
+2. **Development**:
+    - Develop the one-time Visa Master sync job.
+    - Update the ETL workflow to incorporate the new logic for the "Has Visa" column.
+
+3. **Testing**:
+    - Perform unit testing on the developed changes.
+    - Conduct integration testing to ensure the new workflow handles both incremental and historic records correctly.
+
+4. **Deployment**:
+    - Deploy the changes to the production environment.
+    - Monitor the GRM monthly metrics dashboard for any discrepancies.
+
+5. **Documentation and Training**:
+    - Document the changes made to the ETL workflow.
+    - Provide training to relevant stakeholders on the updated process.
+
+#### Expected Outcomes
+- Accurate "Has Visa" information in the GRM monthly metrics dashboard.
+- Proper handling of both incremental and historic records in the ETL workflow.
+- Improved data integrity and reliability for reporting and analysis.
+
+#### Timeline
+- **Week 1-2**: Analysis and planning.
+- **Week 3-4**: Development of the Visa Master sync job and ETL workflow changes.
+- **Week 5-6**: Testing and validation.
+- **Week 7**: Deployment and monitoring.
+- **Week 8**: Documentation and training.
+
+---
+
+This document outlines the problem, objectives, and proposed solution for addressing the issue with the "Has Visa" column in the ETL workflow. Implementing these changes will ensure accurate data representation in the GRM monthly metrics dashboard.
+
+
+
+
+
+
+### Root Cause Issue
+
+#### Background
+The GRM (Global Resource Management) monthly metrics dashboard has reported a production issue related to the "Has Visa" column in the ETL (Extract, Transform, Load) workflow. This problem affects the accurate representation of visa information in the dashboard.
+
+#### Root Cause
+1. **Incremental ETL Workflow**:
+    - In the incremental ETL workflow for both SP and ITCL systems, the "Has Visa" column for all incremental records is initially populated with a hyphen ("-").
+    - A daily visa spring job subsequently updates this column based on the GRM staffing end information.
+
+2. **Historic Records Handling**:
+    - During baseline refresh in the incremental load, historic records also have their "Has Visa" column values updated to a hyphen.
+    - This unintended update occurs because the ETL process does not distinguish between new incremental records and historic records that are already present.
+
+3. **Impact**:
+    - The incorrect handling of historic records leads to inaccurate visa information in the GRM monthly metrics dashboard, affecting the reliability of the data presented.
+
+### Problem Statement
+
+#### Objective
+To address the issue of incorrect "Has Visa" column values for historic records in the ETL workflow, thereby ensuring accurate data representation in the GRM monthly metrics dashboard.
+
+#### Current Process
+1. **Incremental Records**:
+    - All new incremental records have the "Has Visa" column set to a hyphen.
+    - The daily visa spring job updates these records based on GRM staffing end information.
+
+2. **Historic Records**:
+    - Historic records are incorrectly updated with a hyphen during baseline refresh due to the ETL process.
+    - This results in a loss of accurate visa information for historic records in the dashboard.
+
+### Proposed Solution
+
+#### Solution Overview
+To correct the handling of the "Has Visa" column for historic records and ensure accurate data representation, the following steps will be implemented:
+
+1. **Identify Record Set**:
+    - Use the SP Universal Set table to check if a record already exists.
+    - For records present in the Universal Set, update the "Has Visa" column with the correct value instead of setting it to a hyphen.
+
+2. **One-Time Visa Master Sync Job**:
+    - Trigger a one-time sync job to update all historic records from the Visa Master source file.
+    - This will ensure that all historic records are correctly updated before any further incremental loads.
+
+3. **ETL Workflow Changes**:
+    - Modify the ETL workflow to properly handle the "Has Visa" column for historic records.
+    - Ensure that incremental records are cross-referenced with the SP Universal Set table for accurate updates.
+
+4. **Incremental Run Adjustments**:
+    - Implement the described changes for the SP system.
+    - No changes are necessary for the ITCL system, as the "Has Visa" value is already correctly populated in the source file.
+
+#### Detailed Implementation Steps
+
+1. **Analysis and Planning**:
+    - Conduct a comprehensive analysis of the current ETL workflow.
+    - Plan the modifications needed to accurately handle both incremental and historic records.
+
+2. **Development**:
+    - Develop the one-time Visa Master sync job to update historic records.
+    - Update the ETL workflow to include logic for checking the SP Universal Set table before setting the "Has Visa" column.
+
+3. **Testing**:
+    - Perform unit testing on the changes to ensure they function correctly.
+    - Conduct integration testing to validate the new workflow's handling of both incremental and historic records.
+
+4. **Deployment**:
+    - Deploy the updated ETL workflow and the one-time Visa Master sync job to the production environment.
+    - Monitor the GRM monthly metrics dashboard to verify the accuracy of the "Has Visa" information.
+
+5. **Documentation and Training**:
+    - Document all changes made to the ETL workflow.
+    - Provide training to relevant stakeholders on the updated process to ensure smooth adoption.
+
+#### Expected Outcomes
+- Accurate representation of "Has Visa" information in the GRM monthly metrics dashboard.
+- Correct handling of both incremental and historic records in the ETL workflow.
+- Improved data integrity and reliability for reporting and analysis purposes.
+
+#### Timeline
+- **Week 1-2**: Analysis and planning.
+- **Week 3-4**: Development of the Visa Master sync job and ETL workflow updates.
+- **Week 5-6**: Testing and validation.
+- **Week 7**: Deployment and monitoring.
+- **Week 8**: Documentation and training.
+
+---
+
+This document outlines the root cause of the issue, the problem statement, and a detailed proposal for the solution to ensure accurate "Has Visa" information in the GRM monthly metrics dashboard. Implementing these changes will correct the ETL workflow and improve data integrity.
