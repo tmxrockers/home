@@ -1,0 +1,45 @@
+import subprocess
+
+total_memory_command = "wmic ComputerSystem get TotalPhysicalMemory"
+total_memory_output = subprocess.check_output(total_memory_command, shell=True)
+total_memory = int(total_memory_output.split()[1])
+print(f"Total Memory: {total_memory / (1024 ** 3):.2f} GB")
+
+
+available_memory_command = "wmic OS get FreePhysicalMemory"
+available_memory_output = subprocess.check_output(available_memory_command, shell=True)
+available_memory = int(available_memory_output.split()[1]) * 1024
+print(f"Available Memory: {available_memory / (1024 ** 3):.2f} GB")
+
+
+
+
+import os
+import platform
+
+# Total memory (this gives the amount of memory the OS is aware of, not total physical memory)
+if platform.system() == "Windows":
+    import ctypes
+    kernel32 = ctypes.windll.kernel32
+    c_ulonglong = ctypes.c_ulonglong
+    class MEMORYSTATUSEX(ctypes.Structure):
+        _fields_ = [("dwLength", ctypes.c_uint),
+                    ("dwMemoryLoad", ctypes.c_uint),
+                    ("ullTotalPhys", c_ulonglong),
+                    ("ullAvailPhys", c_ulonglong),
+                    ("ullTotalPageFile", c_ulonglong),
+                    ("ullAvailPageFile", c_ulonglong),
+                    ("ullTotalVirtual", c_ulonglong),
+                    ("ullAvailVirtual", c_ulonglong),
+                    ("sullAvailExtendedVirtual", c_ulonglong),]
+    stat = MEMORYSTATUSEX()
+    stat.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+    kernel32.GlobalMemoryStatusEx(ctypes.byref(stat))
+
+    total_memory = stat.ullTotalPhys
+    available_memory = stat.ullAvailPhys
+    memory_usage_percent = stat.dwMemoryLoad
+
+    print(f"Total Memory: {total_memory / (1024 ** 3):.2f} GB")
+    print(f"Available Memory: {available_memory / (1024 ** 3):.2f} GB")
+    print(f"Memory Usage: {memory_usage_percent}%")
