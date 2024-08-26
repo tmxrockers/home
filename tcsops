@@ -1,0 +1,159 @@
+To create a PowerPoint (PPT) presentation for this technical design document, you should focus on simplifying and visually organizing the information into clear sections. Here is a suggested structure for the PPT:
+
+### Slide 1: Title Slide
+- **Title**: TCS Staffing Register Health Logic ETL Workflow
+- **Subtitle**: Technical Design Overview
+- **Your Name/Team Name**
+- **Date**
+
+### Slide 2: Introduction
+- **Objective**: Overview of the ETL workflows in place for TCS Staffing Register Health Logic.
+- **Key Points**:
+  - Introduction to the TCS Staffing Register HLSC and SP Incremental ETL workflows.
+  - Explanation of the purpose of the "SP Universal Set" table.
+
+### Slide 3: Current Workflow Overview
+- **TCS Staffing Register HLSC Workflow**:
+  - Description: Monthly upload of manually generated files.
+  - **Destination**: SP Universal Set table.
+
+- **SP Incremental Workflow**:
+  - Description: System-generated files.
+  - **Destination**: SP Universal Set table.
+
+### Slide 4: Problem Statement
+- **Issue Identified**:
+  - **GDCE ID Matching Problem**: Manual records not matching the staffing register reference table will not be processed.
+  - **Inconsistent Records**: Some GDCE IDs are off-boarded and cause inconsistencies when moved between workflows.
+
+### Slide 5: Proposed Solution
+- **Reference Table Utilization**:
+  - Explanation: Reference table to identify and filter out unmatched GDCE ID records.
+  
+- **Steps**:
+  1. **Check Records Against Reference Table**: Before persisting data, verify GDCE ID records.
+  2. **Delete Duplicate Records**: Clear all TCS Ops records from the SP Universal Set table before updating.
+
+### Slide 6: Workflow Diagram (Optional)
+- **Visual Representation**: A flowchart or diagram illustrating the ETL process from source file upload to data persistence in the SP Universal Set table.
+
+### Slide 7: Data Flow (Detailed)
+- **File Upload**:
+  - Description of monthly manual uploads for TCS Staffing Register HLSC.
+  - Data processing steps in the ETL workflow.
+  
+- **GDCE ID Validation**:
+  - Explanation of how records are matched against the reference table.
+  
+- **Persistence Logic**:
+  - Details on deleting existing records and updating with new records.
+
+### Slide 8: Conclusion
+- **Summary**:
+  - Reinforce the importance of the reference table for maintaining data consistency.
+  - Highlight the solution's impact on preventing duplicate and inconsistent records.
+
+### Slide 9: Questions & Next Steps
+- **Questions**: Open the floor for any questions.
+- **Next Steps**: Outline any remaining tasks or steps for implementation.
+
+---
+
+You can create the PPT using this structure, filling in details as needed and adding visual elements like diagrams, icons, and charts to make the presentation more engaging.
+
+
+
+
+
+
+
+
+To create a 2-page PowerPoint presentation that covers the key points of the technical design document, I suggest the following structure:
+
+---
+
+### **Slide 1: Overview of ETL Workflows & Problem Statement**
+
+#### **Title**: TCS Staffing Register Health Logic ETL Workflow
+
+**1. ETL Workflows Overview**  
+   - **TCS Staffing Register HLSC Workflow**:  
+     - Manual file upload on a monthly basis.
+     - Data is persisted into the "SP Universal Set" table.
+
+   - **SP Incremental Workflow**:  
+     - System-generated file upload.
+     - Data is also persisted into the "SP Universal Set" table.
+
+**2. Problem Statement**  
+   - **GDCE ID Matching Issue**:  
+     - Records from TCS Staffing Register HLSC may not match the reference table.
+     - Unmatched records are not processed by the ETL workflow.
+   - **Inconsistencies in GDCE IDs**:  
+     - Some off-boarded records in "SP Incremental" cause data inconsistencies.
+
+---
+
+### **Slide 2: Proposed Solution & Workflow Logic**
+
+**1. Solution Overview**  
+   - **Reference Table Check**:  
+     - Use a reference table to match GDCE IDs before processing.
+   - **Duplicate Record Prevention**:  
+     - Delete existing TCS Ops records from the "SP Universal Set" table before updating it with new data.
+
+**2. Data Flow Process**  
+   - **Step 1**: Upload the TCS Staffing Register HLSC file.
+   - **Step 2**: Validate records against the reference table.
+   - **Step 3**: Delete existing TCS Ops records from "SP Universal Set".
+   - **Step 4**: Persist the new validated records.
+
+---
+
+This concise format gives a clear and focused summary of the technical design document in just two slides. You can add visuals like simple flow diagrams or bullet points for clarity.
+
+
+
+
+
+
+
+Here is a one-pager brief documentation for the TCS Staffing Register Health Logic ETL workflow:
+
+---
+
+### **TCS Staffing Register Health Logic ETL Workflow - Brief Documentation**
+
+#### **Overview:**
+The TCS Staffing Register Health Logic ETL workflow involves two key workflows that persist data into a common destination table called the "SP Universal Set."
+
+1. **TCS Staffing Register HLSC Workflow**:
+   - **Input**: Monthly manual file upload.
+   - **Process**: Data from the file is processed and persisted in the "SP Universal Set" table.
+
+2. **SP Incremental Workflow**:
+   - **Input**: System-generated file.
+   - **Process**: Data from the system-generated file is also persisted in the "SP Universal Set" table.
+
+#### **Problem Statement:**
+- **GDCE ID Matching Issue**:  
+  Records from the TCS Staffing Register HLSC file may not match the reference table. If a record is not found in the reference table, it will not be processed, leading to inconsistencies.
+- **Inconsistent Data**:  
+  Some GDCE IDs that are off-boarded in the SP Incremental workflow cause inconsistencies when moved between workflows.
+
+#### **Proposed Solution:**
+- **Reference Table Check**:  
+  Before persisting records, the ETL workflow should validate GDCE IDs against a reference table. Records that do not match will be excluded from processing.
+  
+- **Duplicate Record Prevention**:  
+  Prior to updating the "SP Universal Set" table, all TCS Ops records should be deleted from the table to prevent duplication.
+
+#### **Workflow Process:**
+1. **File Upload**: Manually upload the TCS Staffing Register HLSC file.
+2. **Validation**: Match GDCE ID records against the reference table.
+3. **Delete Existing Records**: Remove all TCS Ops records from the "SP Universal Set" table.
+4. **Persist New Records**: Insert the validated records into the table.
+
+---
+
+This one-pager provides a clear and concise summary of the technical design, highlighting the workflows, the problem, and the proposed solution.
