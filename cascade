@@ -1,0 +1,30 @@
+public Map<String, Map<String, List<String>>> getCascadeData() {
+        // Step 1: Create a result map
+        Map<String, Map<String, List<String>>> result = new HashMap<>();
+
+        // Step 2: For each entity in Cio Level 2, treat it as a key and map to its 3_DOT and 4_DOT entries
+        for (OrgEntity entity2Dot : orgData.stream().filter(e -> e.getCioLevel() == 2).collect(Collectors.toList())) {
+            String key = entity2Dot.getOrgGroup() + " - " + entity2Dot.getExecutive();
+
+            // 3_DOT: Fetch entries for Cio Level 3 for the same Org Group
+            List<String> threeDot = orgData.stream()
+                .filter(e -> e.getOrgGroup().equals(entity2Dot.getOrgGroup()) && e.getCioLevel() == 3)
+                .map(e -> e.getExecutive() + " - " + e.getPoint())
+                .collect(Collectors.toList());
+
+            // 4_DOT: Fetch entries for Cio Level 4 for the same Org Group
+            List<String> fourDot = orgData.stream()
+                .filter(e -> e.getOrgGroup().equals(entity2Dot.getOrgGroup()) && e.getCioLevel() == 4)
+                .map(e -> e.getExecutive() + " - " + e.getPoint())
+                .collect(Collectors.toList());
+
+            // Add the 3_DOT and 4_DOT to the result map for this key
+            Map<String, List<String>> dotMap = new HashMap<>();
+            dotMap.put("3_DOT", threeDot);
+            dotMap.put("4_DOT", fourDot);
+
+            result.put(key, dotMap);
+        }
+
+        return result;
+    }
