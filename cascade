@@ -28,3 +28,38 @@ public Map<String, Map<String, List<String>>> getCascadeData() {
 
         return result;
     }
+
+
+
+
+ public Map<String, Map<String, List<String>>> getCustomData() {
+        // Step 1: Create a result map
+        Map<String, Map<String, List<String>>> result = new HashMap<>();
+
+        // Step 2: For each entity in Cio Level 2, treat it as the key
+        for (OrgEntity entity2Dot : orgData.stream().filter(e -> e.getCioLevel() == 2).collect(Collectors.toList())) {
+            String key2Dot = entity2Dot.getOrgGroup() + " - " + entity2Dot.getExecutive();
+
+            // Step 3: For Cio Level 3 under the same Org Group, treat them as sub-keys
+            Map<String, List<String>> level3Map = new HashMap<>();
+            for (OrgEntity entity3Dot : orgData.stream()
+                    .filter(e -> e.getOrgGroup().equals(entity2Dot.getOrgGroup()) && e.getCioLevel() == 3)
+                    .collect(Collectors.toList())) {
+                String key3Dot = entity3Dot.getExecutive() + " - " + entity3Dot.getPoint();
+
+                // Step 4: For Cio Level 4 under the same Org Group, add them to the list
+                List<String> level4List = orgData.stream()
+                    .filter(e -> e.getOrgGroup().equals(entity2Dot.getOrgGroup()) && e.getCioLevel() == 4)
+                    .map(e -> e.getExecutive() + " - " + e.getPoint())
+                    .collect(Collectors.toList());
+
+                // Step 5: Add the Cio Level 4 list under the Cio Level 3 key
+                level3Map.put(key3Dot, level4List);
+            }
+
+            // Step 6: Add the entire level 3 map under the Cio Level 2 key
+            result.put(key2Dot, level3Map);
+        }
+
+        return result;
+    }
