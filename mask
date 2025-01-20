@@ -106,3 +106,71 @@ Sub MaskColumnsDynamically()
   ActiveWorkbook.Close
 
 End Sub
+
+
+
+
+
+Sub MaskColumnsDynamically()
+
+  ' **Get file location from user**
+  Dim filePath As String
+  filePath = Application.GetOpenFilename("Excel Files (*.xlsx), *.xlsx", , "Select Excel File")
+
+  If filePath = "" Then Exit Sub ' User canceled file selection
+
+  ' **Get column names to mask from user**
+  Dim maskColumns As String
+  maskColumns = InputBox("Enter column names to mask (comma-separated):", "Mask Columns")
+
+  If maskColumns = "" Then Exit Sub ' User did not enter any column names
+
+  ' **Split input string into an array**
+  Dim colArray() As String
+  colArray = Split(maskColumns, ",")
+
+  ' **Open the selected file**
+  Workbooks.Open filePath
+
+  ' **Get the last used row**
+  Dim lastRow As Long
+  lastRow = ActiveSheet.Cells(Rows.Count, 1).End(xlUp).Row 
+
+  ' **Get the last used column**
+  Dim lastCol As Long
+  lastCol = ActiveSheet.Cells(2, Columns.Count).End(xlToLeft).Column
+
+  ' **Loop through each column**
+  For i = 1 To lastCol
+
+    ' **Get column header**
+    Dim colHeader As String
+    colHeader = ActiveSheet.Cells(2, i).Value
+
+    ' **Check if column header is in the input array**
+    Dim j As Long
+    For j = LBound(colArray) To UBound(colArray)
+      If Trim(colHeader) = Trim(colArray(j)) Then
+
+        ' **Loop through each row in the column**
+        For k = 3 To lastRow ' Assuming header is in row 2, data starts from row 3
+          ActiveSheet.Cells(k, i).Value = "*****" ' Replace with your desired masking value
+        Next k
+
+        Exit For ' Move to the next column
+      End If
+    Next j
+
+  Next i
+
+  ' **Construct new file path with "_masked"**
+  Dim newFilePath As String
+  newFilePath = Left(filePath, InStrRev(filePath, ".")) & "_masked" & Right(filePath, Len(filePath) - InStrRev(filePath, "."))
+
+  ' **Save the workbook**
+  ActiveWorkbook.SaveAs Filename:=newFilePath
+
+  ' **Close the workbook**
+  ActiveWorkbook.Close
+
+End Sub
