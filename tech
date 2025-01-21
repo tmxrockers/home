@@ -1,0 +1,186 @@
+Technical Approach and Analysis Document
+
+Project Title: GRM Data Masking Automation
+
+Objective:
+
+The objective of this project is to automate the manual process of sanitizing sensitive production data to make it available in GRM lower environments (QA/SIT/UAT) while adhering to GIS policy. This automation will streamline the data masking process, ensure compliance, and significantly reduce the effort required, saving up to 70% of the current 300-man-hour workload per GRM release cycle.
+
+Proposed Solution Overview:
+
+Frontend Technology: Angular
+Backend Technology: Spring Boot (Java)
+
+The solution will be implemented with the following key functionalities:
+
+Data Upload via UI:
+
+A user-friendly Angular-based web interface will allow users to upload data files.
+
+The files will be securely stored in a Network Attached Storage (NAS) path.
+
+Metadata Collection for Masking:
+
+During file upload, the system will prompt users to define masking patterns for sensitive columns.
+
+The metadata, including file structure, column details, and masking rules, will be stored in a relational database.
+
+Automated Masking:
+
+On re-upload of files, the system will automatically apply the previously defined masking patterns based on the metadata.
+
+Masked data will be available for download or direct integration into the GRM lower environments.
+
+Detailed Approach:
+
+1. Data Flow Design:
+
+Step 1: Data File Upload
+
+Users upload files through the Angular UI.
+
+Files are validated for size, type, and structure before upload.
+
+Step 2: Metadata and Masking Pattern Input
+
+A dynamic form is generated based on the uploaded file’s schema.
+
+Users define masking rules for sensitive columns (e.g., encryption, hashing, anonymization).
+
+The metadata and rules are stored in a database table.
+
+Step 3: File Storage
+
+The uploaded file is stored in a designated NAS file path with version control.
+
+Step 4: Automated Masking
+
+When files are re-uploaded, the backend fetches the associated masking metadata.
+
+Masking rules are applied in real time to create a sanitized version of the data.
+
+Step 5: Data Availability
+
+Masked files are made available for download or pushed directly to lower environments.
+
+2. Technical Components:
+
+Frontend (Angular):
+
+Features:
+
+File upload with progress tracking.
+
+Form-based input for masking metadata.
+
+Validation messages and error handling.
+
+View history of uploaded files and associated metadata.
+
+Backend (Spring Boot Java):
+
+Features:
+
+API for file upload and metadata handling.
+
+Integration with NAS for file storage.
+
+Masking engine to apply defined patterns.
+
+Audit trail for file uploads and masking operations.
+
+Database:
+
+Schema to store file details, column metadata, and masking patterns.
+
+NAS Integration:
+
+Secure storage for uploaded files with controlled access.
+
+3. Story Points and Tasks:
+
+Frontend Development:
+
+UI for file upload (5 points)
+
+Metadata form for masking patterns (8 points)
+
+History and audit trail view (5 points)
+
+Validation and error handling (3 points)
+
+Backend Development:
+
+API for file upload and metadata storage (8 points)
+
+Masking engine implementation (13 points)
+
+NAS integration for file storage (5 points)
+
+Audit trail and logging (5 points)
+
+Database Development:
+
+Design schema for metadata storage (3 points)
+
+Integration with backend (5 points)
+
+Testing:
+
+Unit testing for UI and APIs (5 points)
+
+End-to-end testing for file upload and masking (8 points)
+
+Performance testing for large file uploads (8 points)
+
+Deployment and Documentation:
+
+CI/CD pipeline setup (5 points)
+
+User guide and training materials (3 points)
+
+Estimated Timeline:
+
+Phase
+
+Timeline
+
+Requirement Analysis
+
+1 week
+
+Frontend Development
+
+3 weeks
+
+Backend Development
+
+4 weeks
+
+Database Development
+
+2 weeks
+
+Testing
+
+2 weeks
+
+Deployment
+
+1 week
+
+Benefits:
+
+Reduces manual effort by 70%.
+
+Ensures compliance with GIS policies.
+
+Minimizes errors through automation.
+
+Provides a scalable and reusable solution.
+
+Enhances data security with robust masking mechanisms.
+
+Conclusion:
+
+This approach provides a comprehensive and scalable solution to automate data masking for GRM lower environments. The combination of Angular for a dynamic frontend and Spring Boot for a robust backend ensures a seamless and efficient implementation. By adopting this solution, the GRM team will achieve significant efficiency gains and improved data security.
