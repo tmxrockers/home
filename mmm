@@ -1,0 +1,111 @@
+Effort Estimation:
+Task	Story Points	Effort (Days)
+Setting up Angular UI and API	5	3
+Developing file upload/download	3	2
+Implementing masking logic in Java	8	5
+Database integration and logging	5	3
+Testing and debugging	5	3
+Deployment and documentation	3	2
+Total	29	18 Days
+2. Jenkins Pipeline for Python Script Integration
+Approach:
+Build a Jenkins Pipeline to trigger Python scripts for data masking.
+Integrate SharePoint or local directory access for input/output files.
+Provide Jenkins pipeline parameters for:
+Workflow selection (e.g., Python script).
+Environment selection (e.g., DEV, QA, PROD).
+Input file path.
+Use Python scripts for the actual masking logic.
+Features:
+Automated Workflows: Automates data masking tasks through Jenkins pipelines.
+Dynamic Inputs: Users can select masking workflows, environments, and files dynamically.
+Integration with File Repositories: Supports SharePoint or local file systems for input/output files.
+Extensible: Easy to add new workflows (scripts) as needed.
+Benefits:
+Lightweight and easy to implement.
+Automated and repeatable process.
+Can leverage Python’s flexibility and libraries (e.g., Pandas, NumPy) for masking.
+Centralized control via Jenkins.
+Limitations:
+Requires Jenkins setup and management.
+Dependency on Python scripts for customization.
+Limited UI capabilities compared to full-stack solutions.
+Effort Estimation:
+Task	Story Points	Effort (Days)
+Setting up Jenkins pipeline	5	3
+Integrating SharePoint/local file access	5	3
+Writing Python masking scripts	8	5
+Testing and debugging	5	3
+Documentation and user training	3	2
+Total	26	16 Days
+3. Excel Macros
+Approach:
+Use Excel VBA Macros to perform data masking.
+Users upload the data directly into an Excel workbook.
+VBA scripts process the data and mask sensitive columns.
+Masked data is saved as a new Excel file.
+Features:
+Simple Interface: Users can interact directly through Excel.
+Predefined Masking Rules: Implement hardcoded masking logic in VBA scripts.
+One-Click Execution: Users can trigger macros with a button click.
+No Additional Software: Everything runs inside Excel.
+Benefits:
+Very easy to implement and use.
+No additional setup or server requirements.
+Ideal for small datasets or one-time masking tasks.
+Limitations:
+Not suitable for large datasets (performance issues with VBA).
+Hard to scale or integrate with other tools.
+Limited customizability and error handling.
+Effort Estimation:
+Task	Story Points	Effort (Days)
+Designing Excel templates	3	2
+Writing VBA macros for masking	8	5
+Testing and debugging	5	3
+Documentation and user training	3	2
+Total	19	12 Days
+Comparison Table
+Criteria	Java with Angular	Jenkins + Python	Excel Macros
+Ease of Use	Moderate	Easy	Very Easy
+Scalability	High	Moderate	Low
+Customization	High	Moderate	Low
+Performance	High (multi-threaded)	High (Python libraries)	Low (VBA limitations)
+Effort (Story Points)	29	26	19
+Effort (Days)	18	16	12
+Best For	Large datasets with frequent masking needs	Automated workflows for medium datasets	Small datasets or one-time tasks
+Recommendations
+For Scalable Enterprise Solutions: Use Java with Angular.
+For Automation and CI/CD Integration: Use Jenkins with Python Scripts.
+For Quick and Simple Tasks: Use Excel Macros.
+Would you like me to create the PowerPoint presentation with these details or refine any specific section further?
+
+
+
+
+
+
+
+You said:
+Yeah sure can you give me 
+ChatGPT said:
+ChatGPT
+The PowerPoint presentation has been created successfully. You can download it using the link below:
+
+Download Data_Masking_Analysis.pptx
+
+Let me know if you need any further adjustments! 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ChatGPT can make mistakes. Check important info.
