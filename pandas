@@ -203,3 +203,83 @@ masking_rules = {
 
 # Call the function
 mask_excel_data_with_patterns(input_file, output_file, header_row, masking_rules)
+
+
+
+
+
+import openpyxl
+import os
+
+def mask_excel_data_with_workflow(input_file, output_file, header_row, workflow_type):
+    """
+    Masks Excel data dynamically based on the workflow type and preserves formatting.
+
+    :param input_file: Path to the input Excel file.
+    :param output_file: Path to save the masked Excel file.
+    :param header_row: The row (1-indexed) where headers are located.
+    :param workflow_type: The workflow type to determine masking rules.
+    """
+    # Define masking configurations for workflows
+    workflow_rules = {
+        "workflow_a": {
+            "Name": lambda x: f"WF-A-{x}",  # Prefix "WF-A-"
+            "Email": "masked_workflow_a@example.com",  # Replace with constant
+            "Phone": lambda x: f"****{x[-4:]}" if isinstance(x, str) and len(x) >= 4 else "****",
+        },
+        "workflow_b": {
+            "Name": lambda x: f"WF-B-{x}",
+            "Address": "Confidential",  # Replace address with "Confidential"
+        },
+        "default": {
+            "Name": lambda x: f"Masked-{x}",
+            "Email": "masked_default@example.com",
+        },
+    }
+
+    # Determine the masking rules based on the workflow type
+    masking_rules = workflow_rules.get(workflow_type, workflow_rules["default"])
+
+    # Load the workbook
+    wb = openpyxl.load_workbook(input_file)
+    sheet = wb.active
+
+    # Get headers and column mapping
+    headers = [cell.value for cell in sheet[header_row]]
+    column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+    # Validate if all specified columns exist in the file
+    missing_columns = [col for col in masking_rules if col not in column_indices]
+    if missing_columns:
+        print(f"Warning: The following columns were not found in the Excel file: {missing_columns}")
+
+    # Apply masking rules to each row
+    for row in sheet.iter_rows(min_row=header_row + 1):  # Start masking from the data rows
+        for column_name, mask_rule in masking_rules.items():
+            col_idx = column_indices.get(column_name)
+            if col_idx:
+                cell = row[col_idx - 1]  # Get the cell
+                if cell.value:  # Only mask non-empty cells
+                    if callable(mask_rule):  # If the rule is a function, apply it
+                        cell.value = mask_rule(cell.value)
+                    else:  # If the rule is a constant, replace the value
+                        cell.value = mask_rule
+
+    # Save the masked workbook
+    wb.save(output_file)
+    print(f"Masked data saved successfully to {output_file}")
+
+# Input and output file names
+input_file = "input_data.xlsx"
+output_file = "masked_data.xlsx"
+
+# Define the header row (1-indexed)
+header_row = 2  # Example: The second row contains headers
+
+# Define the workflow type based on file name or external input
+file_name = os.path.basename(input_file)  # Extract file name
+workflow_type = "workflow_a" if "data_a" in file_name else "workflow_b"  # Example condition
+
+# Call the function
+mask_excel_data_with_workflow(input_file, output_file, header_row, workflow_type)
+
