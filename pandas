@@ -142,3 +142,64 @@ masking_rules = {
 
 # Call the function
 mask_excel_data_with_patterns(input_file, output_file, header_row, masking_rules)
+
+
+
+
+
+import openpyxl
+
+def mask_excel_data_with_patterns(input_file, output_file, header_row, masking_rules):
+    """
+    Masks Excel data based on given masking rules and preserves formatting.
+
+    :param input_file: Path to the input Excel file.
+    :param output_file: Path to save the masked Excel file.
+    :param header_row: The row (1-indexed) where headers are located.
+    :param masking_rules: A dictionary where keys are column names and values are masking functions or constants.
+    """
+    # Load the workbook
+    wb = openpyxl.load_workbook(input_file)
+    sheet = wb.active  # Use the first sheet by default
+
+    # Get headers and column mapping
+    headers = [cell.value for cell in sheet[header_row]]
+    column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+    # Validate if all specified columns exist in the file
+    missing_columns = [col for col in masking_rules if col not in column_indices]
+    if missing_columns:
+        print(f"Error: The following columns were not found in the Excel file: {missing_columns}")
+        return
+
+    # Apply masking rules to each row
+    for row in sheet.iter_rows(min_row=header_row + 1):  # Start masking from the data rows
+        for column_name, mask_rule in masking_rules.items():
+            col_idx = column_indices[column_name]
+            cell = row[col_idx - 1]  # Get the cell (openpyxl uses 0-based indexing)
+            if cell.value:  # Only mask non-empty cells
+                if callable(mask_rule):  # If the rule is a function, apply it
+                    cell.value = mask_rule(cell.value)
+                else:  # If the rule is a constant, replace the value
+                    cell.value = mask_rule
+
+    # Save the masked workbook
+    wb.save(output_file)
+    print(f"Masked data saved successfully to {output_file}")
+
+# Input and output file names
+input_file = "input_data.xlsx"
+output_file = "masked_data.xlsx"
+
+# Define the header row (1-indexed)
+header_row = 2  # Example: The second row contains headers
+
+# Define masking rules
+masking_rules = {
+    "Name": lambda x: f"PR-{x}",  # Add prefix "PR-" to the Name column
+    "Email": "masked_email@example.com",  # Replace all Email column values with a constant
+    "Phone": lambda x: f"****{x[-4:]}" if isinstance(x, str) and len(x) >= 4 else "****",  # Mask Phone column, show last 4 digits
+}
+
+# Call the function
+mask_excel_data_with_patterns(input_file, output_file, header_row, masking_rules)
