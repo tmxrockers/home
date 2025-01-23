@@ -283,3 +283,85 @@ workflow_type = "workflow_a" if "data_a" in file_name else "workflow_b"  # Examp
 # Call the function
 mask_excel_data_with_workflow(input_file, output_file, header_row, workflow_type)
 
+
+
+
+from office365.sharepoint.client_context import ClientContext
+from office365.runtime.auth.user_credential import UserCredential
+import openpyxl
+import io
+
+# SharePoint Configuration
+SHAREPOINT_SITE_URL = "https://yourcompany.sharepoint.com/sites/your-site-name"
+SHAREPOINT_DOC_LIBRARY = "Shared Documents"  # Document library name
+SHAREPOINT_FILE_PATH = "path/to/your/input_file.xlsx"  # File path in SharePoint
+OUTPUT_FILE_PATH = "path/to/your/output_file.xlsx"  # Path to upload the masked file
+USERNAME = "your_email@example.com"
+PASSWORD = "your_password"
+
+# Connect to SharePoint
+ctx = ClientContext(SHAREPOINT_SITE_URL).with_credentials(UserCredential(USERNAME, PASSWORD))
+
+def download_file_from_sharepoint(file_path):
+    """
+    Downloads a file from SharePoint and returns it as an in-memory binary stream.
+    """
+    file = ctx.web.get_file_by_server_relative_url(file_path).download().execute_query()
+    print(f"Downloaded: {file_path}")
+    return io.BytesIO(file.content)
+
+def upload_file_to_sharepoint(file_path, file_content):
+    """
+    Uploads a file to SharePoint from an in-memory binary stream.
+    """
+    target_folder = ctx.web.get_folder_by_server_relative_url(SHAREPOINT_DOC_LIBRARY)
+    target_folder.upload_file(file_path, file_content).execute_query()
+    print(f"Uploaded: {file_path}")
+
+def mask_excel_data(input_stream, header_row, masking_rules):
+    """
+    Masks Excel data in-memory based on masking rules and returns a binary stream of the masked file.
+    """
+    # Load the workbook
+    wb = openpyxl.load_workbook(input_stream)
+    sheet = wb.active
+
+    # Get headers and column mapping
+    headers = [cell.value for cell in sheet[header_row]]
+    column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+    # Apply masking rules
+    for row in sheet.iter_rows(min_row=header_row + 1):  # Start masking from the data rows
+        for column_name, mask_rule in masking_rules.items():
+            col_idx = column_indices.get(column_name)
+            if col_idx:
+                cell = row[col_idx - 1]
+                if cell.value:  # Only mask non-empty cells
+                    if callable(mask_rule):  # If the rule is a function, apply it
+                        cell.value = mask_rule(cell.value)
+                    else:  # If the rule is a constant, replace the value
+                        cell.value = mask_rule
+
+    # Save the workbook to an in-memory stream
+    output_stream = io.BytesIO()
+    wb.save(output_stream)
+    output_stream.seek(0)
+    return output_stream
+
+# Define the masking rules
+header_row = 2  # Example: Headers are in the second row
+masking_rules = {
+    "Name": lambda x: f"Masked-{x}",  # Prefix with "Masked-"
+    "Email": "masked@example.com",  # Replace with a constant
+    "Phone": lambda x: f"****{x[-4:]}" if isinstance(x, str) and len(x) >= 4 else "****",
+}
+
+# Workflow
+# Step 1: Download the file from SharePoint
+input_file_stream = download_file_from_sharepoint(SHAREPOINT_FILE_PATH)
+
+# Step 2: Apply masking
+masked_file_stream = mask_excel_data(input_file_stream, header_row, masking_rules)
+
+# Step 3: Upload the masked file back to SharePoint
+upload_file_to_sharepoint(OUTPUT_FILE_PATH, masked_file_stream.getvalue())
