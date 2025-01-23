@@ -365,3 +365,45 @@ masked_file_stream = mask_excel_data(input_file_stream, header_row, masking_rule
 
 # Step 3: Upload the masked file back to SharePoint
 upload_file_to_sharepoint(OUTPUT_FILE_PATH, masked_file_stream.getvalue())
+
+
+
+
+
+from office365.sharepoint.client_context import ClientContext
+from office365.runtime.auth.user_credential import UserCredential
+
+# SharePoint Configuration
+SHAREPOINT_SITE_URL = "https://yourcompany.sharepoint.com/sites/your-site-name"
+USERNAME = "your_email@example.com"
+PASSWORD = "your_password"
+
+def authenticate_sharepoint(site_url, username, password):
+    """
+    Authenticates to SharePoint and verifies the connection.
+    
+    :param site_url: The SharePoint site URL.
+    :param username: SharePoint account username.
+    :param password: SharePoint account password.
+    :return: True if authentication is successful, otherwise False.
+    """
+    try:
+        # Create the ClientContext with credentials
+        ctx = ClientContext(site_url).with_credentials(UserCredential(username, password))
+
+        # Try accessing the web title to verify authentication
+        web = ctx.web
+        ctx.load(web)
+        ctx.execute_query()  # Execute the query to verify connection
+
+        print(f"Successfully connected to SharePoint site: {web.properties['Title']}")
+        return True
+    except Exception as e:
+        print(f"Failed to authenticate to SharePoint. Error: {e}")
+        return False
+
+# Call the authentication function
+if authenticate_sharepoint(SHAREPOINT_SITE_URL, USERNAME, PASSWORD):
+    print("Authentication successful.")
+else:
+    print("Authentication failed.")
