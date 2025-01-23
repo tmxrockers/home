@@ -1,0 +1,40 @@
+import pandas as pd
+
+def mask_excel_data(input_file, output_file, columns_to_mask, header_row):
+    # Load the entire Excel file with no headers to preserve the structure
+    full_df = pd.read_excel(input_file, header=None)
+
+    # Extract the actual data starting from the header row
+    data_df = pd.read_excel(input_file, header=header_row)
+
+    # Mask the specified columns
+    for column in columns_to_mask:
+        if column in data_df.columns:
+            # Replace data with asterisks if the cell is not empty
+            data_df[column] = data_df[column].apply(
+                lambda x: '*' * len(str(x)) if pd.notna(x) and str(x).strip() else x
+            )
+        else:
+            print(f"Column '{column}' not found in the Excel file.")
+
+    # Replace the data in the original structure
+    full_df.iloc[header_row + 1:, :] = data_df.values
+
+    # Save the modified data to a new Excel file
+    full_df.to_excel(output_file, index=False, header=False)
+    print(f"Masked data saved to {output_file}")
+
+# Input file name
+input_file = "input_data.xlsx"
+
+# Output file name
+output_file = "masked_data.xlsx"
+
+# Columns to mask
+columns_to_mask = ["Name", "Email", "Phone"]  # Replace with the columns you want to mask
+
+# Header row (0-indexed, e.g., 1 means second row)
+header_row = 1
+
+# Call the function
+mask_excel_data(input_file, output_file, columns_to_mask, header_row)
