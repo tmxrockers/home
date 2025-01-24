@@ -188,3 +188,99 @@ public class SharePointMasking {
         String apply(String value);
     }
 }
+
+
+
+
+
+package com.example.excelmasking.controller;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/masking")
+public class MaskingController {
+
+    // Endpoint to read, mask, and save the Excel file
+    @PostMapping("/mask")
+    public ResponseEntity<String> maskExcelFile(@RequestParam String inputFilePath,
+                                                @RequestParam String outputFilePath) {
+        try {
+            // Load the input Excel file
+            FileInputStream inputStream = new FileInputStream(inputFilePath);
+            Workbook workbook = new XSSFWorkbook(inputStream);
+
+            // Get the first sheet
+            Sheet sheet = workbook.getSheetAt(0);
+
+            // Define masking rules
+            Map<String, MaskingRule> maskingRules = new HashMap<>();
+            maskingRules.put("Name", value -> "Masked-" + value); // Prefix "Masked-" to the name
+            maskingRules.put("Email", value -> "masked@example.com"); // Replace email with a constant
+            maskingRules.put("Phone", value -> value.replaceAll("\\d(?=\\d{4})", "*")); // Mask phone numbers
+
+            // Mask the data
+            maskSheetData(sheet, maskingRules);
+
+            // Save the masked file to the output path
+            FileOutputStream outputStream = new FileOutputStream(outputFilePath);
+            workbook.write(outputStream);
+            workbook.close();
+            inputStream.close();
+            outputStream.close();
+
+            return ResponseEntity.ok("File masked successfully and saved to: " + outputFilePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error processing file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Apply masking rules to the Excel sheet.
+     */
+    private void maskSheetData(Sheet sheet, Map<String, MaskingRule> maskingRules) {
+        // Assuming headers are in the first row (row 0)
+        Row headerRow = sheet.getRow(0);
+        if (headerRow == null) {
+            throw new IllegalArgumentException("Header row is missing in the Excel file.");
+        }
+
+        // Map column names to their indices
+        Map<String, Integer> columnIndices = new HashMap<>();
+        for (Cell cell : headerRow) {
+            columnIndices.put(cell.getStringCellValue(), cell.getColumnIndex());
+        }
+
+        // Iterate through rows and apply masking rules
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) continue; // Skip the header row
+            for (Map.Entry<String, MaskingRule> entry : maskingRules.entrySet()) {
+                String columnName = entry.getKey();
+                MaskingRule rule = entry.getValue();
+                if (columnIndices.containsKey(columnName)) {
+                    Cell cell = row.getCell(columnIndices.get(columnName));
+                    if (cell != null && cell.getCellType() == CellType.STRING) {
+                        String originalValue = cell.getStringCellValue();
+                        cell.setCellValue(rule.apply(originalValue)); // Apply the masking rule
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Functional interface for masking rules.
+     */
+    @FunctionalInterface
+    interface MaskingRule {
+        String apply(String value);
+    }
+}
