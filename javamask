@@ -453,19 +453,17 @@ import java.util.Map;
 @RequestMapping("/api/masking")
 public class MaskingController {
 
-    /**
-     * Endpoint to upload, mask, and download an Excel file with styles retained.
-     */
     @PostMapping("/mask")
     public ResponseEntity<byte[]> maskExcelFile(@RequestParam("file") MultipartFile file) {
         try {
             // Load the original Excel file
             XSSFWorkbook originalWorkbook = new XSSFWorkbook(file.getInputStream());
             Sheet originalSheet = originalWorkbook.getSheetAt(0);
+            String originalSheetName = originalWorkbook.getSheetName(0); // Get original sheet name
 
             // Create a streaming workbook for output
             SXSSFWorkbook streamingWorkbook = new SXSSFWorkbook();
-            Sheet streamingSheet = streamingWorkbook.createSheet("Masked Data");
+            Sheet streamingSheet = streamingWorkbook.createSheet(originalSheetName); // Retain original sheet name
 
             // Define masking rules
             Map<String, MaskingRule> maskingRules = new HashMap<>();
@@ -493,9 +491,6 @@ public class MaskingController {
         }
     }
 
-    /**
-     * Copies data and styles from the original sheet while applying masking rules.
-     */
     private void copyAndMaskSheet(Sheet originalSheet, Sheet streamingSheet, Map<String, MaskingRule> maskingRules) {
         // Assuming headers are in the second row (row index 1)
         Row originalHeaderRow = originalSheet.getRow(1);
@@ -544,9 +539,6 @@ public class MaskingController {
         }
     }
 
-    /**
-     * Copies cell styles and values from the source cell to the target cell.
-     */
     private void copyCellStylesAndValue(Cell sourceCell, Cell targetCell) {
         Workbook workbook = targetCell.getSheet().getWorkbook();
 
@@ -574,11 +566,9 @@ public class MaskingController {
         }
     }
 
-    /**
-     * Functional interface for masking rules.
-     */
     @FunctionalInterface
     interface MaskingRule {
         String apply(String value);
     }
 }
+
