@@ -430,3 +430,155 @@ public class MaskingController {
         String apply(String value);
     }
 }
+
+
+
+package com.example.excelmasking.controller;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/masking")
+public class MaskingController {
+
+    /**
+     * Endpoint to upload, mask, and download an Excel file with styles retained.
+     */
+    @PostMapping("/mask")
+    public ResponseEntity<byte[]> maskExcelFile(@RequestParam("file") MultipartFile file) {
+        try {
+            // Load the original Excel file
+            XSSFWorkbook originalWorkbook = new XSSFWorkbook(file.getInputStream());
+            Sheet originalSheet = originalWorkbook.getSheetAt(0);
+
+            // Create a streaming workbook for output
+            SXSSFWorkbook streamingWorkbook = new SXSSFWorkbook();
+            Sheet streamingSheet = streamingWorkbook.createSheet("Masked Data");
+
+            // Define masking rules
+            Map<String, MaskingRule> maskingRules = new HashMap<>();
+            maskingRules.put("Name", value -> "Masked-" + value); // Prefix "Masked-" to the name
+            maskingRules.put("Email", value -> "masked@example.com"); // Replace email with a constant
+            maskingRules.put("Phone", value -> value.replaceAll("\\d(?=\\d{4})", "*")); // Mask phone numbers
+
+            // Process and mask data with styles
+            copyAndMaskSheet(originalSheet, streamingSheet, maskingRules);
+
+            // Write the masked file to a byte array
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            streamingWorkbook.write(outputStream);
+            streamingWorkbook.dispose(); // Dispose temporary files
+            originalWorkbook.close();
+
+            // Return the response with the masked file
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=masked_file.xlsx")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(outputStream.toByteArray());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    /**
+     * Copies data and styles from the original sheet while applying masking rules.
+     */
+    private void copyAndMaskSheet(Sheet originalSheet, Sheet streamingSheet, Map<String, MaskingRule> maskingRules) {
+        // Assuming headers are in the second row (row index 1)
+        Row originalHeaderRow = originalSheet.getRow(1);
+        if (originalHeaderRow == null) {
+            throw new IllegalArgumentException("Header row is missing in the Excel file.");
+        }
+
+        // Map column names to their indices
+        Map<String, Integer> columnIndices = new HashMap<>();
+        Row streamingHeaderRow = streamingSheet.createRow(0); // Create header row in the streaming sheet
+        for (Cell cell : originalHeaderRow) {
+            int colIndex = cell.getColumnIndex();
+            String header = cell.getStringCellValue();
+            columnIndices.put(header, colIndex);
+
+            // Copy headers to the streaming workbook
+            Cell streamingCell = streamingHeaderRow.createCell(colIndex);
+            copyCellStylesAndValue(cell, streamingCell);
+        }
+
+        // Process and mask data rows
+        for (int rowIndex = 2; rowIndex <= originalSheet.getLastRowNum(); rowIndex++) {
+            Row originalRow = originalSheet.getRow(rowIndex);
+            if (originalRow == null) continue;
+
+            Row streamingRow = streamingSheet.createRow(rowIndex - 1); // Create row in streaming sheet
+            for (Cell originalCell : originalRow) {
+                if (originalCell == null) continue;
+
+                Cell streamingCell = streamingRow.createCell(originalCell.getColumnIndex());
+                copyCellStylesAndValue(originalCell, streamingCell);
+
+                // Apply masking logic if needed
+                for (Map.Entry<String, MaskingRule> entry : maskingRules.entrySet()) {
+                    String columnName = entry.getKey();
+                    MaskingRule rule = entry.getValue();
+                    if (columnIndices.containsKey(columnName) &&
+                            columnIndices.get(columnName).equals(originalCell.getColumnIndex())) {
+                        if (originalCell.getCellType() == CellType.STRING) {
+                            String originalValue = originalCell.getStringCellValue();
+                            streamingCell.setCellValue(rule.apply(originalValue));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Copies cell styles and values from the source cell to the target cell.
+     */
+    private void copyCellStylesAndValue(Cell sourceCell, Cell targetCell) {
+        Workbook workbook = targetCell.getSheet().getWorkbook();
+
+        // Copy styles
+        CellStyle newCellStyle = workbook.createCellStyle();
+        newCellStyle.cloneStyleFrom(sourceCell.getCellStyle());
+        targetCell.setCellStyle(newCellStyle);
+
+        // Copy value based on the cell type
+        switch (sourceCell.getCellType()) {
+            case STRING:
+                targetCell.setCellValue(sourceCell.getStringCellValue());
+                break;
+            case NUMERIC:
+                targetCell.setCellValue(sourceCell.getNumericCellValue());
+                break;
+            case BOOLEAN:
+                targetCell.setCellValue(sourceCell.getBooleanCellValue());
+                break;
+            case FORMULA:
+                targetCell.setCellFormula(sourceCell.getCellFormula());
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Functional interface for masking rules.
+     */
+    @FunctionalInterface
+    interface MaskingRule {
+        String apply(String value);
+    }
+}
