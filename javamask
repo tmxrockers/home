@@ -1,0 +1,190 @@
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+
+public class SharePointMasking {
+
+    // SharePoint Configuration
+    private static final String SHAREPOINT_SITE_URL = "https://yourcompany.sharepoint.com/sites/your-site-name";
+    private static final String SHAREPOINT_FILE_PATH = "/sites/your-site-name/Shared Documents/input_file.xlsx";
+    private static final String OUTPUT_FILE_NAME = "masked_file.xlsx";
+    private static final String USERNAME = "your_email@example.com";
+    private static final String PASSWORD = "your_password";
+
+    // Authentication
+    private static String accessToken;
+
+    public static void main(String[] args) {
+        try {
+            // Authenticate with SharePoint
+            if (authenticateSharePoint()) {
+                System.out.println("Authentication successful!");
+
+                // Download file from SharePoint
+                byte[] fileData = downloadFileFromSharePoint(SHAREPOINT_FILE_PATH);
+
+                // Mask the data
+                InputStream inputStream = new ByteArrayInputStream(fileData);
+                ByteArrayOutputStream outputStream = maskExcelData(inputStream);
+
+                // Upload masked file back to SharePoint
+                uploadFileToSharePoint(OUTPUT_FILE_NAME, outputStream.toByteArray());
+                System.out.println("Masked file uploaded successfully!");
+            } else {
+                System.out.println("Authentication failed.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Authenticate with SharePoint and retrieve the access token.
+     */
+    private static boolean authenticateSharePoint() {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            // Authentication URL for SharePoint Online
+            String authUrl = "https://accounts.accesscontrol.windows.net/common/oauth2/token";
+
+            // Create HTTP POST request for authentication
+            HttpPost post = new HttpPost(authUrl);
+            post.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            // Request body
+            String requestBody = "grant_type=password&resource=" + SHAREPOINT_SITE_URL
+                    + "&client_id=" + USERNAME + "&username=" + USERNAME + "&password=" + PASSWORD;
+            post.setEntity(MultipartEntityBuilder.create().addTextBody("body", requestBody, ContentType.TEXT_PLAIN).build());
+
+            // Execute the request
+            try (CloseableHttpResponse response = client.execute(post)) {
+                String responseBody = EntityUtils.toString(response.getEntity());
+                if (response.getCode() == 200) {
+                    // Extract the access token from the response
+                    accessToken = extractAccessToken(responseBody);
+                    return true;
+                } else {
+                    System.out.println("Failed to authenticate. Response: " + responseBody);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Extracts the access token from the authentication response.
+     */
+    private static String extractAccessToken(String responseBody) {
+        // Implement JSON parsing logic to extract the "access_token" value
+        // For simplicity, replace this with your preferred JSON parsing library
+        return "extracted_access_token";  // Replace with actual implementation
+    }
+
+    /**
+     * Download a file from SharePoint.
+     */
+    private static byte[] downloadFileFromSharePoint(String filePath) throws IOException {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            String downloadUrl = SHAREPOINT_SITE_URL + "/_api/web/getfilebyserverrelativeurl('" + filePath + "')/$value";
+
+            // Create GET request
+            HttpGet get = new HttpGet(downloadUrl);
+            get.addHeader("Authorization", "Bearer " + accessToken);
+
+            // Execute the request
+            try (CloseableHttpResponse response = client.execute(get)) {
+                if (response.getCode() == 200) {
+                    return response.getEntity().getContent().readAllBytes();
+                } else {
+                    throw new IOException("Failed to download file. Response code: " + response.getCode());
+                }
+            }
+        }
+    }
+
+    /**
+     * Mask Excel data in-memory.
+     */
+    private static ByteArrayOutputStream maskExcelData(InputStream inputStream) throws IOException {
+        // Load the workbook
+        Workbook workbook = new XSSFWorkbook(inputStream);
+        Sheet sheet = workbook.getSheetAt(0);  // Get the first sheet
+
+        // Define the masking rules
+        Map<String, MaskingRule> maskingRules = new HashMap<>();
+        maskingRules.put("Name", value -> "Masked-" + value);
+        maskingRules.put("Email", value -> "masked@example.com");
+        maskingRules.put("Phone", value -> value.replaceAll("\\d(?=\\d{4})", "*"));
+
+        // Get header row
+        Row headerRow = sheet.getRow(1);  // Assuming headers are in the second row
+        Map<String, Integer> columnIndices = new HashMap<>();
+        for (Cell cell : headerRow) {
+            columnIndices.put(cell.getStringCellValue(), cell.getColumnIndex());
+        }
+
+        // Mask data
+        for (Row row : sheet) {
+            if (row.getRowNum() <= 1) continue;  // Skip header row
+            for (Map.Entry<String, MaskingRule> entry : maskingRules.entrySet()) {
+                String columnName = entry.getKey();
+                MaskingRule rule = entry.getValue();
+                if (columnIndices.containsKey(columnName)) {
+                    Cell cell = row.getCell(columnIndices.get(columnName));
+                    if (cell != null && cell.getCellType() == CellType.STRING) {
+                        cell.setCellValue(rule.apply(cell.getStringCellValue()));
+                    }
+                }
+            }
+        }
+
+        // Save the workbook to an output stream
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+        return outputStream;
+    }
+
+    /**
+     * Upload a file to SharePoint.
+     */
+    private static void uploadFileToSharePoint(String fileName, byte[] fileContent) throws IOException {
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            String uploadUrl = SHAREPOINT_SITE_URL + "/_api/web/getfolderbyserverrelativeurl('Shared Documents')/files/add(overwrite=true, url='" + fileName + "')";
+
+            // Create POST request
+            HttpPost post = new HttpPost(uploadUrl);
+            post.addHeader("Authorization", "Bearer " + accessToken);
+            post.setEntity(MultipartEntityBuilder.create()
+                    .addBinaryBody("file", fileContent, ContentType.APPLICATION_OCTET_STREAM, fileName)
+                    .build());
+
+            // Execute the request
+            try (CloseableHttpResponse response = client.execute(post)) {
+                if (response.getCode() != 200) {
+                    throw new IOException("Failed to upload file. Response code: " + response.getCode());
+                }
+            }
+        }
+    }
+
+    /**
+     * Functional interface for masking rules.
+     */
+    @FunctionalInterface
+    interface MaskingRule {
+        String apply(String value);
+    }
+}
