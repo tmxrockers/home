@@ -795,3 +795,59 @@ def mask_excel_file(file_path, header_row, rules):
 
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
+
+
+
+
+
+from openpyxl.styles import numbers
+from datetime import datetime
+
+def ensure_text_format(sheet, header_row):
+    """Ensure all data is treated as text, including date-formatted cells."""
+    for row in sheet.iter_rows(min_row=header_row + 1):
+        for cell in row:
+            if isinstance(cell.value, datetime):  
+                # Convert date to string while maintaining its original format
+                cell.value = cell.value.strftime("%Y-%m-%d %H:%M:%S")  # Customize format as needed
+                cell.number_format = "@"  # Force text format
+            elif isinstance(cell.value, (int, float)):
+                continue  # Keep numeric values unchanged
+            elif isinstance(cell.value, str) and cell.number_format in numbers.FORMAT_DATE:
+                cell.value = str(cell.value)  # Convert text-like dates to string
+            elif isinstance(cell.value, str):
+                cell.value = cell.value.strip()  # Remove unnecessary spaces
+            cell.number_format = "@"  # Ensure text format
+
+def mask_excel_file(file_path, header_row, rules):
+    """Mask Excel data while ensuring correct format handling."""
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active  # Use the first sheet by default
+
+        headers = ensure_valid_headers(sheet, header_row)  # Fix headers
+        ensure_text_format(sheet, header_row)  # Convert date-formatted cells to text
+
+        column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+        for row in sheet.iter_rows(min_row=header_row + 1):
+            if is_row_empty(row):
+                continue  # Skip empty rows
+
+            for column_name, pattern, mask_value in rules:
+                col_idx = column_indices.get(column_name)
+                if col_idx:
+                    cell = row[col_idx - 1]
+                    cell.value = apply_masking(cell.value, pattern, mask_value)
+
+        # Save the masked file
+        base_dir = os.path.dirname(file_path)
+        masked_folder = os.path.join(base_dir, "Masked_Files")
+        os.makedirs(masked_folder, exist_ok=True)
+
+        output_file = os.path.join(masked_folder, os.path.basename(file_path))
+        wb.save(output_file)
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
