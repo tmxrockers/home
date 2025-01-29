@@ -851,3 +851,114 @@ def mask_excel_file(file_path, header_row, rules):
 
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
+
+
+
+
+
+import openpyxl
+import os
+
+# Function to apply masking patterns
+def apply_masking(value, pattern, mask_value):
+    """Apply different masking patterns."""
+    if value is None or str(value).strip() == "":
+        return value  # Do not mask empty cells
+
+    if pattern == "Constant":
+        return mask_value
+    elif pattern == "Prefix":
+        return f"{mask_value}{value}"
+    elif pattern == "Suffix":
+        return f"{value}{mask_value}"
+    elif pattern == "Email":
+        return mask_email(str(value))
+    elif pattern == "Null":
+        return None
+    return value  # Default: No masking if pattern is unknown
+
+def mask_email(value):
+    """Mask an email address while keeping the domain intact."""
+    if "@" in value:
+        username, domain = value.split("@", 1)
+        masked_username = "".join("x" if c.isalpha() else c for c in username)
+        return f"{masked_username}@{domain}"
+    return value  # Return unchanged if not a valid email
+
+def ensure_text_format(sheet, header_row):
+    """Ensure all data is treated as text to prevent Alteryx misinterpretation."""
+    for row in sheet.iter_rows(min_row=header_row + 1):
+        for cell in row:
+            # If cell is numeric, no change, just continue
+            if isinstance(cell.value, (int, float)):
+                continue
+            # If the value is a string formatted as a date, treat it as text
+            elif isinstance(cell.value, str) and cell.number_format == "MM/dd/yyyy":
+                cell.value = str(cell.value)  # Convert date to string
+                cell.number_format = "@"  # Force text format
+            elif isinstance(cell.value, str):
+                cell.value = cell.value.strip()  # Clean text data
+            # Force text format on all other cases
+            cell.number_format = "@"  # Apply text format
+
+def ensure_valid_headers(sheet, header_row):
+    """Ensure all headers are valid and force them to be string-based."""
+    headers = []
+    for cell in sheet[header_row]:
+        if isinstance(cell.value, (int, float)):  
+            cell.value = f"Column_{cell.column}"  # Rename numerical headers
+        elif cell.value is None or str(cell.value).strip() == "":
+            cell.value = f"Column_{cell.column}"  # Rename blank headers
+        else:
+            cell.value = str(cell.value).strip()  # Convert to string
+        cell.number_format = "@"  # Force text format
+        headers.append(cell.value)
+    return headers
+
+def mask_excel_file(file_path, header_row, rules):
+    """Mask Excel data while ensuring correct format handling."""
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active  # Use the first sheet by default
+
+        # Fix headers and force correct text formatting
+        headers = ensure_valid_headers(sheet, header_row)
+        ensure_text_format(sheet, header_row)
+
+        # Apply masking rules
+        column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+        for row in sheet.iter_rows(min_row=header_row + 1):
+            if is_row_empty(row):
+                continue  # Skip empty rows
+
+            for column_name, pattern, mask_value in rules:
+                col_idx = column_indices.get(column_name)
+                if col_idx:
+                    cell = row[col_idx - 1]
+                    cell.value = apply_masking(cell.value, pattern, mask_value)
+
+        # Save the masked file
+        base_dir = os.path.dirname(file_path)
+        masked_folder = os.path.join(base_dir, "Masked_Files")
+        os.makedirs(masked_folder, exist_ok=True)
+
+        output_file = os.path.join(masked_folder, os.path.basename(file_path))
+        wb.save(output_file)
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+# Helper function to check if a row is empty
+def is_row_empty(row):
+    """Check if all values in a row are NULL or empty."""
+    return all(cell.value is None or str(cell.value).strip() == "" for cell in row)
+
+# Assuming metadata is already grouped by workflow and file
+# metadata_df = Alteryx.read("#1")
+# Example of usage:
+file_path = "input_file.xlsx"
+header_row = 2
+masking_rules = [("Name", "Prefix", "PR-"), ("Email", "Email", ""), ("Phone", "Suffix", "-1234")]
+
+mask_excel_file(file_path, header_row, masking_rules)
