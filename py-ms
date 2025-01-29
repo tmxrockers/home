@@ -449,3 +449,95 @@ def mask_excel_file(file_path, header_row, rules):
 for (workflow_type, file_path, header_row), group in grouped_rules:
     masking_rules = list(zip(group["Column Name"], group["Masking Pattern"], group["Masking Value"]))
     mask_excel_file(file_path, int(header_row), masking_rules)
+
+
+
+
+import openpyxl
+import os
+import pandas as pd
+from ayx import Alteryx  # Alteryx-specific library for input/output
+
+# Read metadata from Alteryx input
+metadata_df = Alteryx.read("#1")  # "#1" represents the first Alteryx input
+
+# Convert metadata into a dictionary grouped by Workflow Type and File Path
+grouped_rules = metadata_df.groupby(["Workflow Type", "File Path", "Header Row"])
+
+def mask_email(value):
+    """Mask an email address while keeping the domain intact."""
+    if "@" in value:
+        username, domain = value.split("@", 1)
+        masked_username = "".join("x" if c.isalpha() else c for c in username)
+        return f"{masked_username}@{domain}"
+    return value  # Return unchanged if not a valid email
+
+def apply_masking(value, pattern, mask_value):
+    """Apply different masking patterns."""
+    if value is None or str(value).strip() == "":
+        return value  # Do not mask empty cells
+
+    if pattern == "Constant":
+        return mask_value
+    elif pattern == "Prefix":
+        return f"{mask_value}{value}"
+    elif pattern == "Suffix":
+        return f"{value}{mask_value}"
+    elif pattern == "Email":
+        return mask_email(str(value))
+    elif pattern == "Null":
+        return None
+    return value  # Default: No masking if pattern is unknown
+
+def is_row_empty(row):
+    """Check if all values in a row are NULL or empty."""
+    return all(cell.value is None or str(cell.value).strip() == "" for cell in row)
+
+def mask_excel_file(file_path, header_row, rules):
+    """Mask Excel data while handling NULL row scenarios."""
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active  # Use the first sheet by default
+
+        # Read headers as text (forcing string conversion)
+        headers = [str(cell.value) for cell in sheet[header_row]]
+        column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+        previous_row_empty = False  # Flag to track empty row condition
+
+        for row in sheet.iter_rows(min_row=header_row + 1):  
+            if is_row_empty(row):  
+                previous_row_empty = True  
+                continue  # Skip masking for empty rows
+
+            if previous_row_empty:
+                print("Skipping masking due to NULL row condition.")
+                break  # Stop masking if previous row was empty
+
+            for column_name, pattern, mask_value in rules:
+                col_idx = column_indices.get(column_name)
+                if col_idx:
+                    cell = row[col_idx - 1]
+                    cell.value = apply_masking(cell.value, pattern, mask_value)
+
+        # Save masked file in a new folder
+        base_dir = os.path.dirname(file_path)
+        masked_folder = os.path.join(base_dir, "Masked_Files")
+        os.makedirs(masked_folder, exist_ok=True)  # Create only if not exists
+
+        output_file = os.path.join(masked_folder, os.path.basename(file_path))
+
+        # Ensure headers remain text
+        for col_idx, col_name in enumerate(headers, start=1):
+            sheet.cell(row=header_row, column=col_idx, value=str(col_name))  
+
+        wb.save(output_file)
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+# Process each workflow type and file separately
+for (workflow_type, file_path, header_row), group in grouped_rules:
+    masking_rules = list(zip(group["Column Name"], group["Masking Pattern"], group["Masking Value"]))
+    mask_excel_file(file_path, int(header_row), masking_rules)
