@@ -183,3 +183,86 @@ for (workflow_type, file_path, header_row), group in grouped_rules:
     
     # Mask the Excel file
     mask_excel_file(file_path, int(header_row), masking_rules)
+
+
+
+
+import openpyxl
+import os
+import pandas as pd
+from ayx import Alteryx  # Alteryx-specific library
+
+# Read metadata from Alteryx input
+metadata_df = Alteryx.read("#1")  # "#1" is the first input in Alteryx
+
+# Convert metadata into a dictionary grouped by Workflow Type and File Path
+grouped_rules = metadata_df.groupby(["Workflow Type", "File Path", "Header Row"])
+
+def apply_masking(value, pattern, mask_value):
+    """
+    Apply the specified masking pattern to a given value.
+
+    :param value: The original cell value.
+    :param pattern: The masking pattern (Constant, Prefix, Suffix, Email, Null).
+    :param mask_value: The value used for masking (if applicable).
+    :return: Masked value.
+    """
+    if value is None or str(value).strip() == "":
+        return value  # Do not mask empty cells
+
+    if pattern == "Constant":
+        return mask_value
+    elif pattern == "Prefix":
+        return f"{mask_value}{value}"
+    elif pattern == "Suffix":
+        return f"{value}{mask_value}"
+    elif pattern == "Email":
+        return f"masked_{value.split('@')[0]}@example.com" if "@" in str(value) else mask_value
+    elif pattern == "Null":
+        return None
+    return value  # Default: No masking if pattern is unknown
+
+def mask_excel_file(file_path, header_row, rules):
+    """
+    Mask the given Excel file based on the rules provided and store it in a new folder.
+
+    :param file_path: Path to the Excel file.
+    :param header_row: The row number where headers exist (1-based index).
+    :param rules: List of tuples (column name, pattern, mask value).
+    """
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active  
+
+        # Identify columns based on the given header row
+        headers = [cell.value for cell in sheet[header_row]]
+        column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+        # Apply masking rules
+        for row in sheet.iter_rows(min_row=header_row + 1):  
+            for column_name, pattern, mask_value in rules:
+                col_idx = column_indices.get(column_name)
+                if col_idx:
+                    cell = row[col_idx - 1]
+                    cell.value = apply_masking(cell.value, pattern, mask_value)
+
+        # Create a new folder in the same location as the original file
+        base_dir = os.path.dirname(file_path)
+        masked_folder = os.path.join(base_dir, "Masked_Files")
+        os.makedirs(masked_folder, exist_ok=True)  # Create only if not exists
+
+        # Save masked file with the same name inside the new folder
+        output_file = os.path.join(masked_folder, os.path.basename(file_path))
+        wb.save(output_file)
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+# Process each workflow type and file separately
+for (workflow_type, file_path, header_row), group in grouped_rules:
+    # Create a list of masking rules for this file
+    masking_rules = list(zip(group["Column Name"], group["Masking Pattern"], group["Masking Value"]))
+    
+    # Mask the Excel file
+    mask_excel_file(file_path, int(header_row), masking_rules)
