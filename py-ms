@@ -59,3 +59,67 @@ for (workflow_type, file_path, header_row), group in grouped_rules:
     
     # Mask the Excel file
     mask_excel_file(file_path, int(header_row), masking_rules)
+
+
+
+
+
+
+
+
+import openpyxl
+import pandas as pd
+import os
+
+# Load the metadata file (update the path accordingly)
+metadata_file = "metadata.xlsx"
+metadata_df = pd.read_excel(metadata_file)
+
+# Convert metadata into a dictionary grouped by Workflow Type and File Path
+grouped_rules = metadata_df.groupby(["Workflow Type", "File Path", "Header Row"])
+
+def mask_excel_file(file_path, header_row, rules):
+    """
+    Mask the given Excel file based on the rules provided and store it in a new folder.
+
+    :param file_path: Path to the Excel file.
+    :param header_row: The row number where headers exist (1-based index).
+    :param rules: Dictionary mapping column names to masking values.
+    """
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active  
+
+        # Identify columns based on the given header row
+        headers = [cell.value for cell in sheet[header_row]]
+        column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+        # Apply masking rules
+        for row in sheet.iter_rows(min_row=header_row + 1):  
+            for column_name, mask_value in rules.items():
+                col_idx = column_indices.get(column_name)
+                if col_idx:
+                    cell = row[col_idx - 1]
+                    if cell.value:  # Only mask non-empty values
+                        cell.value = mask_value  # Use the masking value from metadata
+
+        # Create a new folder in the same location as the original file
+        base_dir = os.path.dirname(file_path)
+        masked_folder = os.path.join(base_dir, "Masked_Files")
+        os.makedirs(masked_folder, exist_ok=True)  # Create only if not exists
+
+        # Save masked file with the same name inside the new folder
+        output_file = os.path.join(masked_folder, os.path.basename(file_path))
+        wb.save(output_file)
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+# Process each workflow type and file separately
+for (workflow_type, file_path, header_row), group in grouped_rules:
+    # Create masking rule dictionary for this file from the metadata
+    masking_rules = dict(zip(group["Column Name"], group["Masking Value"]))
+    
+    # Mask the Excel file
+    mask_excel_file(file_path, int(header_row), masking_rules)
