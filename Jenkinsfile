@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        label 'windows' // Specify a Windows agent label
+    }
 
     parameters {
         file(name: 'METADATA_FILE', description: 'Upload the metadata file (optional)')
