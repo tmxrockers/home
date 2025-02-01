@@ -42,10 +42,16 @@ pipeline {
                 script {
                     // Run the Python script with the metadata file path
                     echo "Running Python script from repository..."
-                    if (isUnix()) {
-                        sh "python3 ${REPO_DIR}/datamasking.py ${METADATA_PATH}" // Use 'python3' for Linux/Mac
-                    } else {
-                        bat "python ${REPO_DIR}/datamasking.py ${METADATA_PATH}" // Use 'python' for Windows
+                    // Run the Python script and capture output
+                    try {
+                         if (isUnix()) {
+                            sh "python3 ${REPO_DIR}/datamasking.py ${METADATA_PATH}" // Use 'python3' for Linux/Mac
+                        } else {
+                            bat "python ${REPO_DIR}/datamasking.py ${METADATA_PATH}" // Use 'python' for Windows
+                        }
+                    } catch (Exception e) {
+                        echo "Python script failed with exception: ${e}"
+                        currentBuild.result = 'FAILURE'
                     }
                 }
             }
