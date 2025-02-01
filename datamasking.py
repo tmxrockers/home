@@ -15,5 +15,5 @@ def main(metadata_file):
         sys.exit(1)  # Exit with a non-zero status code to indicate failure
 
 if __name__ == "__main__":
-    metadata_file = sys.argv[1] if len(sys.argv) > 1 else "default_file.xlsx"
+    metadata_file = sys.argv[1] if len(sys.argv) > 1 else "DataMasking.xlsx"
     main(metadata_file)
