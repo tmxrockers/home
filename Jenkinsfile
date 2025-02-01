@@ -6,8 +6,8 @@ pipeline {
     }
 
     environment {
-        BITBUCKET_REPO = "https://bitbucket.org/your-username/grm_datamasking_automation.git" // Update with your repo URL
-        REPO_DIR = "grm_datamasking_automation" // Directory where the repo will be cloned
+        BITBUCKET_REPO = "https://github.com/tmxrockers/home.git" // Update with your repo URL
+        REPO_DIR = "home" // Directory where the repo will be cloned
         DEFAULT_METADATA_FILE = "${REPO_DIR}/DataMasking.xlsx" // Default metadata file path in the repo
     }
 
@@ -17,7 +17,7 @@ pipeline {
                 script {
                     // Clone the Bitbucket repository
                     echo "Cloning Bitbucket repository: ${BITBUCKET_REPO}"
-                    git branch: 'main', credentialsId: 'your-bitbucket-credentials-id', url: "${BITBUCKET_REPO}"
+                    git branch: 'main', url: "${BITBUCKET_REPO}"
                 }
             }
         }
@@ -43,9 +43,9 @@ pipeline {
                     // Run the Python script with the metadata file path
                     echo "Running Python script from repository..."
                     if (isUnix()) {
-                        sh "python3 ${REPO_DIR}/your_script.py ${METADATA_PATH}" // Use 'python3' for Linux/Mac
+                        sh "python3 ${REPO_DIR}/datamasking.py ${METADATA_PATH}" // Use 'python3' for Linux/Mac
                     } else {
-                        bat "python ${REPO_DIR}/your_script.py ${METADATA_PATH}" // Use 'python' for Windows
+                        bat "python ${REPO_DIR}/datamasking.py ${METADATA_PATH}" // Use 'python' for Windows
                     }
                 }
             }
