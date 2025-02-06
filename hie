@@ -132,3 +132,189 @@ Phase 3 (Testing & Go-Live Readiness)
 
 The hierarchy changes impact financial reporting, ETL mappings, and forecasting logic for Global Technology. A structured approach with ETL updates, validation, and testing will ensure a smooth transition. The first step is to communicate the changes to the Finance Team, incorporate their feedback, and validate updates within the current workflow before moving forward.
 
+
+
+
+
+
+
+
+Detailed Analysis Document: Impact of Global Technology Hierarchy Changes on Finance Forecast Drill-Down Report
+
+1. Introduction
+
+The Enterprise Reference Data Repository (eRDR-AIT #26192) team has announced updates to the GBS Financial and HR Hierarchies for Global Technology (GT), scheduled to go live in April 2025.
+
+The Finance Forecast Drill-Down Report relies on the Hierarchy Map file shared by the Finance Team, which provides point-level hierarchy data. The ETL workflow applies filters at the report level and calculates the current/previous forecast data based on the CIO level for Global Technology. These updates impact multiple ETL processes, including Actuals, Previous, Forecast, and Hierarchy Map files.
+
+This document provides a detailed explanation of the changes, their impact on ETL workflows, and the necessary actions to ensure a smooth transition.
+
+2. Key Changes and Impact on Finance Forecast Drill-Down Report
+
+2.1 Changes in Global Technology Hierarchy
+
+10 DOT Hierarchy Code Structure Update:
+
+3rd character now represents Technology Organization (VST).
+
+4th character references the LOB ML3 business (e.g., VSTC for Core Technology Infrastructure).
+
+5th character references the LOB ML4 business hierarchy.
+
+New Financial and HR Hierarchy Mappings for Global Technology.
+
+Hierarchy Map file and Forecast file contain updates that must be reflected in ETL processing.
+
+2.2 Impact on Finance Forecast Drill-Down Report
+
+Hierarchy Map File Updates
+
+The Hierarchy Map file shared by the Finance Team must be updated with the new structure.
+
+The first cut of changes should be communicated to the Finance Team for validation.
+
+ETL Workflow Adjustments
+
+Actuals, Previous, and Forecast files must align with the new LOB ML2, ML3, ML4 hierarchy levels.
+
+Ensure point-level data references are updated to match the new hierarchy structure.
+
+Filtering & Calculation Adjustments
+
+CIO-level calculation logic should be updated to reflect the new hierarchy codes.
+
+Finance Forecast calculations (current/previous) need to be validated for accuracy.
+
+Downstream Impact
+
+Applications consuming Global Technology financial hierarchy data from RDR must be reviewed and updated.
+
+Ensure dashboards and reports reflect new hierarchy mappings.
+
+3. ETL Workflow Impact and Required Changes
+
+3.1 Impact on ETL Files
+
+The following ETL files are impacted due to changes in hierarchy structure:
+
+ETL File
+
+Impact
+
+Actuals File
+
+Update mapping logic to align with new hierarchy codes
+
+Previous File
+
+Modify reference structures to match new LOB levels
+
+Forecast File
+
+Adjust calculations based on updated CIO-level definitions
+
+Hierarchy Map
+
+Ensure point-level hierarchy data aligns with the new structure
+
+3.2 Required Updates in ETL Processing
+
+Update Source Data Processing:
+
+Modify the extraction logic to accommodate the new hierarchy format in the Hierarchy Map file.
+
+Ensure all mappings reflect LOB ML2, ML3, and ML4 levels.
+
+Transformation Logic Adjustments:
+
+Modify lookup tables and transformation rules to recognize the updated hierarchy structure.
+
+Ensure CIO-level aggregation logic aligns with the new financial hierarchy mappings.
+
+Filtering and Calculation Updates:
+
+Adjust filtering conditions in the ETL pipeline to ensure correct forecasting calculations.
+
+Validate that the current and previous forecast data calculations are correct.
+
+Downstream Report Modifications:
+
+Modify reports to display new hierarchy labels and structures.
+
+Ensure data reconciliation is completed before go-live.
+
+4. New Global Technology Hierarchy Mappings
+
+Global Technology Segment
+
+New Hierarchy Code
+
+GTO Administration & Global Technology
+
+VSTA
+
+Employee Experience Technology
+
+VSTB
+
+Technology Infrastructure (TI)
+
+VSTC
+
+GT Business Management & Controls
+
+VSTD
+
+Application Production Services & Engineering
+
+VSTE
+
+Consumer Business and Wealth Tech
+
+VSTG
+
+Global Info Security (GIS)
+
+VSTJ
+
+GCIB and GTS Tech
+
+VSTM
+
+Data Mgmt. Tech & Enterprise Arch
+
+VSTQ
+
+Global Markets Technology
+
+VSTT
+
+Employee Technology Support
+
+VSTV
+
+Enterprise Risk & Finance Technology
+
+VSTW
+
+5. Readiness and Next Steps
+
+Phase 1: Impact Assessment & Planning
+
+✔ Identify ETL workflows using Global Technology hierarchy data.✔ List affected tables, reports, dashboards.✔ Assess CIO-level calculations for alignment with new structures.✔ Inform the Finance Team about the changes in the Hierarchy Map and Forecast files.
+
+Phase 2: ETL & Report Modifications
+
+✔ Update hierarchy mappings in ETL.✔ Adjust filtering logic in Finance Forecast Drill-Down Report.✔ Validate forecast calculations post-changes.✔ Test updates with current workflow after Finance Team acknowledgment.
+
+Phase 3: Testing & Go-Live Readiness
+
+✔ Perform data validation and reconciliation tests.✔ Confirm no data loss or miscalculations.✔ Coordinate with RDR team for April 2025 Go-Live.
+
+6. Conclusion
+
+The hierarchy changes impact financial reporting, ETL mappings, and forecasting logic for Global Technology. A structured approach with ETL updates, validation, and testing will ensure a smooth transition. The first step is to communicate the changes to the Finance Team, incorporate their feedback, and validate updates within the current workflow before moving forward.
+
+By implementing the outlined changes, we ensure data integrity, forecasting accuracy, and smooth integration of the updated hierarchy structure in the Finance Forecast Drill-Down Report.
+
+
