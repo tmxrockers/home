@@ -58,3 +58,82 @@ for table_name, rules in grouped_metadata:
     output_filename = f"masked_{table_name}.yxdb"
     output_path = os.path.join(output_folder, output_filename)
     ayx.write(table_df, output_path, output_format="yxdb")
+
+
+
+
+
+
+
+
+import pandas as pd
+import Alteryx as ayx
+import os
+
+# Read input data (table data)
+df = ayx.read("#1")  # First input: table data
+
+# Read metadata (masking rules)
+metadata = ayx.read("#2")  # Second input: masking rules
+
+# Clean column names to avoid errors
+metadata.columns = metadata.columns.str.strip().str.lower()
+df.columns = df.columns.str.strip().str.lower()
+
+# Ensure required columns exist
+required_columns = ["table name", "column name", "masking pattern", "masking value", "output folder path"]
+missing_columns = [col for col in required_columns if col not in metadata.columns]
+if missing_columns:
+    raise ValueError(f"Missing columns in metadata: {missing_columns}")
+
+# Get the table name from metadata (since one table is processed at a time)
+table_name = metadata["table name"].iloc[0]  # First row's table name
+
+# Filter table-specific data
+table_df = df[df["table name"] == table_name].copy()
+
+# Extract the output folder path
+output_folder = metadata["output folder path"].iloc[0]
+os.makedirs(output_folder, exist_ok=True)  # Ensure directory exists
+
+# Define the masking functions
+def apply_masking(value, pattern, mask_value):
+    """Apply different masking patterns."""
+    if pd.isna(value) or str(value).strip() == "":
+        return value  # Do not mask empty cells
+
+    if pattern == "constant":
+        return mask_value
+    elif pattern == "prefix":
+        return f"{mask_value}{value}"
+    elif pattern == "suffix":
+        return f"{value}{mask_value}"
+    elif pattern == "email":
+        return mask_email(str(value))
+    elif pattern == "null":
+        return None
+    return value  # Default: No masking if pattern is unknown
+
+def mask_email(value):
+    """Mask an email address while keeping the domain intact."""
+    if "@" in value:
+        username, domain = value.split("@", 1)
+        masked_username = "".join("x" if c.isalpha() else c for c in username)
+        return f"{masked_username}@{domain}"
+    return value  # Return unchanged if not a valid email
+
+# Apply masking based on metadata
+for _, row in metadata.iterrows():
+    column_name = row["column name"]
+    pattern = row["masking pattern"].lower()
+    mask_value = row["masking value"]
+
+    if column_name in table_df.columns:
+        table_df[column_name] = table_df[column_name].apply(lambda x: apply_masking(x, pattern, mask_value))
+
+# Save the masked file (appending table name)
+output_filename = f"masked_{table_name}.yxdb"
+output_path = os.path.join(output_folder, output_filename)
+
+ayx.write(table_df, output_path, output_format="yxdb")
+print(f"Masked file saved: {output_path}")
