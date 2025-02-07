@@ -1,0 +1,60 @@
+import pandas as pd
+import Alteryx as ayx
+import os
+
+# Read the input data (table data)
+df = ayx.read("#1")  # First input (table data)
+
+# Read the metadata (masking rules)
+metadata = ayx.read("#2")  # Second input (masking rules)
+
+# Define the masking functions
+def apply_masking(value, pattern, mask_value):
+    """Apply different masking patterns."""
+    if pd.isna(value) or str(value).strip() == "":
+        return value  # Do not mask empty cells
+
+    if pattern == "Constant":
+        return mask_value
+    elif pattern == "Prefix":
+        return f"{mask_value}{value}"
+    elif pattern == "Suffix":
+        return f"{value}{mask_value}"
+    elif pattern == "Email":
+        return mask_email(str(value))
+    elif pattern == "Null":
+        return None
+    return value  # Default: No masking if pattern is unknown
+
+def mask_email(value):
+    """Mask an email address while keeping the domain intact."""
+    if "@" in value:
+        username, domain = value.split("@", 1)
+        masked_username = "".join("x" if c.isalpha() else c for c in username)
+        return f"{masked_username}@{domain}"
+    return value  # Return unchanged if not a valid email
+
+# Group metadata by 'Table Name'
+grouped_metadata = metadata.groupby("Table Name")
+
+# Iterate over each table and apply masking
+for table_name, rules in grouped_metadata:
+    table_df = df[df["Table Name"] == table_name].copy()  # Get only relevant table data
+    
+    # Extract the output folder path from metadata (assuming it is the same for a table)
+    output_folder = rules["Output Folder Path"].values[0]
+    os.makedirs(output_folder, exist_ok=True)  # Ensure the directory exists
+
+    # Apply masking based on the metadata rules
+    for _, row in rules.iterrows():
+        column_name = row["Column Name"]
+        pattern = row["Masking Pattern"]
+        mask_value = row["Masking Value"]
+        
+        if column_name in table_df.columns:
+            table_df[column_name] = table_df[column_name].apply(lambda x: apply_masking(x, pattern, mask_value))
+
+    # Save each table's masked data with an appended table name
+    output_filename = f"masked_{table_name}.yxdb"
+    output_path = os.path.join(output_folder, output_filename)
+    ayx.write(table_df, output_path, output_format="yxdb")
