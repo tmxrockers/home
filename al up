@@ -1,0 +1,116 @@
+Here’s a structured version of your presentation in text format with proper details for your stakeholders:
+
+
+---
+
+Slide 1: Title Slide
+
+Title: GRM Release 16 – Impact of Alteryx Upgrade
+Presented By: [Your Name]
+Date: [Presentation Date]
+
+
+---
+
+Slide 2: Impact on GRM Release 16 Plan
+
+Timeline Adjustments
+
+Original Release Date: May 17, 2025
+
+Updated Release Date: June 7, 2025
+
+Reason for Delay: Additional development sprint due to Alteryx upgrade
+
+
+Development Sprints
+
+Previously: 4 Development Sprints
+
+Now: 5 Development Sprints (Added one more sprint after the Alteryx upgrade)
+
+
+Impact Analysis
+
+No Impact on SIT and UAT Phases
+
+SIT starts on April 23, 2025
+
+UAT starts on May 7, 2025
+
+Alteryx upgrade completes by April 18, 2025 → No direct impact on testing phases
+
+
+
+
+---
+
+Slide 3: Proposal Plan for GRM Release 16
+
+Key Considerations
+
+✅ Aligning development with Alteryx upgrade completion
+✅ Ensuring SIT and UAT phases remain unaffected
+✅ Maintaining stability in the GRM release while incorporating necessary changes
+
+Proposed Actions
+
+1. Finalizing SIT Readiness before April 23, 2025
+
+
+2. Enhancing Regression Testing post-Alteryx upgrade to ensure compatibility
+
+
+3. Monitoring UAT closely (May 7 – May 20, 2025) for any unexpected issues
+
+
+4. Code Freeze on May 30, 2025, leading to final deployment on June 7, 2025
+
+
+
+
+---
+
+Slide 4: Production SS Upgrade – Impact on GDR & Fieldglass Reports
+
+Upgrade Window: May 12 – May 19, 2025
+
+During this period, GRM application will be partially available
+
+GDR downstream Fieldglass reports will be affected, leading to outdated data in:
+
+SP Incremental
+
+ITCL Incremental
+
+ITCL Open Positions
+
+Work Order Pipeline
+
+TCS Health Logic
+
+Finance Forecast & Drill Down
+
+PMMT Reports
+
+
+
+Mitigation Strategy
+
+✅ Pre-extract critical reports before May 12
+✅ Communicate to downstream teams about temporary unavailability
+✅ Post-upgrade data validation before UAT starts on May 7
+
+
+---
+
+Final Slide: Q&A
+
+Open Floor for Questions
+
+
+
+---
+
+Let me know if you need any refinements!
+
