@@ -213,3 +213,221 @@ for (workflow_type, file_path, header_row), group in grouped_rules:
         group["Referenced Lookup Output Column"]
     ))
     mask_excel_file(file_path, int(header_row), masking_rules)
+
+
+
+
+
+
+
+
+
+
+import openpyxl
+import os
+from typing import List, Dict, Optional, Any
+
+
+def mask_email(value: str) -> str:
+    """Mask an email address while keeping the domain intact."""
+    if isinstance(value, str) and "@" in value:
+        username, domain = value.split("@", 1)
+        masked_username = "".join("x" if c.isalpha() else c for c in username)
+        return f"{masked_username}@{domain}"
+    return value  # Return unchanged if not a valid email or not string
+
+
+def apply_mask_value_filter(value: Any, masking_value_filter: Optional[str]) -> bool:
+    """Apply a masking value filter to a value."""
+    if masking_value_filter and masking_value_filter.strip():
+        try:
+            return eval(masking_value_filter, {"value": str(value)})
+        except Exception as e:
+            print(f"Error evaluating masking value filter '{masking_value_filter}': {e}")
+    return True  # Default to applying masking if no filter or error
+
+
+def apply_constant_mask(value: Any, mask_value: Any, masking_value_filter: Optional[str]) -> Any:
+    """Apply a constant mask to a value."""
+    return mask_value if apply_mask_value_filter(value, masking_value_filter) else value
+
+
+def apply_prefix_mask(value: Any, mask_value: Any, masking_value_filter: Optional[str]) -> Any:
+    """Apply a prefix mask to a value."""
+    return f"{mask_value}{value}" if apply_mask_value_filter(value, masking_value_filter) else value
+
+
+def apply_suffix_mask(value: Any, mask_value: Any, masking_value_filter: Optional[str]) -> Any:
+    """Apply a suffix mask to a value."""
+    return f"{value}{mask_value}" if apply_mask_value_filter(value, masking_value_filter) else value
+
+
+def apply_email_mask(value: Any, masking_value_filter: Optional[str]) -> Any:
+    """Apply an email mask to a value."""
+    return mask_email(str(value)) if apply_mask_value_filter(value, masking_value_filter) and value else value
+
+
+def apply_null_mask(value: Any, masking_value_filter: Optional[str]) -> Any:
+    """Apply a null mask to a value."""
+    return None if apply_mask_value_filter(value, masking_value_filter) else value
+
+
+def apply_referenced_file_mask(
+    value: Any,
+    referenced_data: List[Dict[str, Any]],
+    condition_columns: List[str],
+    referenced_columns: List[str],
+    condition_type: str,
+    row_data: Dict[str, Any],
+    output_column: str,
+) -> Any:
+    """Apply a referenced file mask to a value."""
+    for ref_row in referenced_data:
+        match = True
+        for cond_col, ref_col in zip(condition_columns, referenced_columns):
+            cond_value = row_data.get(cond_col)
+            ref_value = ref_row.get(ref_col)
+            if cond_value is None or ref_value is None:
+                match = False
+                break
+            if condition_type == "Equals" and str(ref_value).lower() != str(cond_value).lower():
+                match = False
+                break
+            elif condition_type == "Contains" and str(ref_value).lower() not in str(cond_value).lower():
+                match = False
+                break
+        if match:
+            return ref_row.get(output_column, value)  # Return the referenced value if a match is found
+    return value  # Return the original value if no match is found
+
+
+def read_referenced_file(file_path: str, sheet_name: str) -> Optional[List[Dict[str, Any]]]:
+    """Read the referenced file and return the data as a list of dictionaries."""
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb[sheet_name]
+        headers = [cell.value for cell in sheet[1]]
+        data = []
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            row_data = {headers[idx]: value for idx, value in enumerate(row)}
+            data.append(row_data)
+        return data
+    except Exception as e:
+        print(f"Error reading referenced file {file_path}: {e}")
+        return None
+
+
+def mask_excel_file(file_path: str, header_row: int, rules: List[tuple]) -> None:
+    """Mask Excel data while preserving formatting."""
+    try:
+        # Load the workbook and active sheet
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active
+
+        # Read the header row to get column names
+        headers = [cell.value for cell in sheet[header_row]]
+
+        # Add temporary columns for referenced-based masking
+        for column_name, pattern, _, _, referenced_file_path, referenced_sheet, condition_column, referenced_column, _, include_in_output, _ in rules:
+            if include_in_output == "No" and column_name not in headers:
+                # Add temporary column with None values
+                headers.append(column_name)
+                sheet.cell(row=header_row, column=len(headers), value=column_name)
+
+        # Process each row below the header
+        for row in sheet.iter_rows(min_row=header_row + 1, values_only=False):
+            row_data = {headers[idx]: cell.value for idx, cell in enumerate(row)}
+
+            # Apply each masking rule
+            for column_name, pattern, mask_value, masking_value_filter, referenced_file_path, referenced_sheet, condition_column, referenced_column, condition_type, include_in_output, output_column in rules:
+                if column_name not in headers:
+                    print(f"Warning: Column '{column_name}' not found in the main dataset.")
+                    continue
+
+                value = row_data.get(column_name)
+                if pattern == "Constant":
+                    new_value = apply_constant_mask(value, mask_value, masking_value_filter)
+                elif pattern == "Prefix":
+                    new_value = apply_prefix_mask(value, mask_value, masking_value_filter)
+                elif pattern == "Suffix":
+                    new_value = apply_suffix_mask(value, mask_value, masking_value_filter)
+                elif pattern == "Email":
+                    new_value = apply_email_mask(value, masking_value_filter)
+                elif pattern == "Null":
+                    new_value = apply_null_mask(value, masking_value_filter)
+                elif pattern == "Referenced File":
+                    referenced_data = read_referenced_file(referenced_file_path, referenced_sheet)
+                    condition_columns = condition_column.split(";") if condition_column else []
+                    referenced_columns = referenced_column.split(";") if referenced_column else []
+                    new_value = apply_referenced_file_mask(
+                        value, referenced_data, condition_columns, referenced_columns, condition_type, row_data, output_column
+                    )
+                else:
+                    new_value = value  # Default: No masking if pattern is unknown
+
+                # Update the cell value
+                cell = row[headers.index(column_name)]
+                cell.value = new_value
+
+        # Remove columns marked as "No" in Include in Output?
+        columns_to_remove = [column_name for column_name, _, _, _, _, _, _, _, _, include_in_output, _ in rules if include_in_output == "No"]
+        for column_name in columns_to_remove:
+            if column_name in headers:
+                col_idx = headers.index(column_name) + 1  # Convert to 1-based index
+                sheet.delete_cols(col_idx)
+                headers.remove(column_name)
+
+        # Save masked file in a new folder
+        base_dir = os.path.dirname(file_path)
+        masked_folder = os.path.join(base_dir, "Masked_Files")
+        os.makedirs(masked_folder, exist_ok=True)
+
+        output_file = os.path.join(masked_folder, os.path.basename(file_path))
+        wb.save(output_file)
+
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+
+def main():
+    """Main function to process masking rules."""
+    # Load metadata from the Excel file
+    metadata_wb = openpyxl.load_workbook("DataMasking.xlsx")
+    metadata_sheet = metadata_wb.active
+
+    # Read metadata headers
+    metadata_headers = [cell.value for cell in metadata_sheet[1]]
+
+    # Group rules by Workflow Type, File Path, and Header Row
+    grouped_rules = {}
+    for row in metadata_sheet.iter_rows(min_row=2, values_only=True):
+        workflow_type, file_path, header_row = row[0], row[1], row[2]
+        key = (workflow_type, file_path, header_row)
+        if key not in grouped_rules:
+            grouped_rules[key] = []
+        grouped_rules[key].append(row)
+
+    # Process each group of rules
+    for (workflow_type, file_path, header_row), rules in grouped_rules.items():
+        masking_rules = []
+        for rule in rules:
+            masking_rules.append((
+                rule[metadata_headers.index("Column Name")],
+                rule[metadata_headers.index("Masking Pattern")],
+                rule[metadata_headers.index("Masking Value")],
+                rule[metadata_headers.index("Masking Value Filter")],
+                rule[metadata_headers.index("Referenced Lookup File Path")],
+                rule[metadata_headers.index("Referenced Lookup Sheet")],
+                rule[metadata_headers.index("Condition Column")],
+                rule[metadata_headers.index("Referenced Lookup Column")],
+                rule[metadata_headers.index("Referenced Condition Type")],
+                rule[metadata_headers.index("Include in Output? (Yes/No)")],
+                rule[metadata_headers.index("Referenced Lookup Output Column")],
+            ))
+        mask_excel_file(file_path, int(header_row), masking_rules)
+
+
+if __name__ == "__main__":
+    main()
