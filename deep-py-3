@@ -1,12 +1,11 @@
-import openpyxl  # For working with Excel files
-import os  # For interacting with the operating system (e.g., file paths)
-import pandas as pd  # For data manipulation and reading Excel files
+import openpyxl
+import os
+import pandas as pd
 
-# Read metadata from Alteryx input (Excel file containing masking rules)
+# Read metadata from Alteryx input
 metadata_df = pd.read_excel("DataMasking.xlsx", sheet_name=0)
 
-# Convert metadata into a dictionary grouped by Workflow Type, File Path, and Header Row
-# This allows processing masking rules for each unique file and workflow combination
+# Convert metadata into a dictionary grouped by Workflow Type and File Path
 grouped_rules = metadata_df.groupby(["Workflow Type", "File Path", "Header Row"])
 
 def mask_email(value):
@@ -18,88 +17,122 @@ def mask_email(value):
     return value  # Return unchanged if not a valid email or not string
 
 def apply_masking_column(column, pattern, mask_value, masking_value_filter, referenced_data=None, condition_columns=None, referenced_columns=None, condition_type=None, main_df=None, output_column=None):
-    """Apply masking to an entire column based on the specified pattern and filter."""
-    masked_column = []
-    for val in column:
-        # Apply Masking Value Filter (if specified)
-        if masking_value_filter and pd.notna(masking_value_filter):
-            try:
-                # Evaluate the filter as a Python expression, with 'value' representing the cell value
-                if not eval(masking_value_filter, {"value": str(val)}):
+    """Apply masking to an entire column."""
+    if pattern == "Constant":
+        masked_column = []
+        for val in column:
+            # Apply Masking Value Filter only for Constant
+            if masking_value_filter and pd.notna(masking_value_filter):
+                try:
+                    if not eval(masking_value_filter, {"value": str(val)}):
+                        masked_column.append(val)
+                        continue  # Skip the rest of the masking logic for this value
+                except Exception as e:
+                    print(f"Error evaluating masking value filter '{masking_value_filter}': {e}")
                     masked_column.append(val)
-                    continue  # Skip the rest of the masking logic for this value
-            except Exception as e:
-                print(f"Error evaluating masking value filter '{masking_value_filter}': {e}")
-                masked_column.append(val)
-                continue
+                    continue
 
-        # Apply masking based on the specified pattern
-        if pattern == "Constant":
             masked_column.append(mask_value)
-        elif pattern == "Prefix":
+        return masked_column
+
+    elif pattern == "Prefix":
+        masked_column = []
+        for val in column:
+            # Apply Masking Value Filter only for Prefix
+            if masking_value_filter and pd.notna(masking_value_filter):
+                try:
+                    if not eval(masking_value_filter, {"value": str(val)}):
+                        masked_column.append(val)
+                        continue  # Skip the rest of the masking logic for this value
+                except Exception as e:
+                    print(f"Error evaluating masking value filter '{masking_value_filter}': {e}")
+                    masked_column.append(val)
+                    continue
+
             masked_column.append(f"{mask_value}{val}")
-        elif pattern == "Suffix":
+        return masked_column
+
+    elif pattern == "Suffix":
+        masked_column = []
+        for val in column:
+            # Apply Masking Value Filter only for Suffix
+            if masking_value_filter and pd.notna(masking_value_filter):
+                try:
+                    if not eval(masking_value_filter, {"value": str(val)}):
+                        masked_column.append(val)
+                        continue  # Skip the rest of the masking logic for this value
+                except Exception as e:
+                    print(f"Error evaluating masking value filter '{masking_value_filter}': {e}")
+                    masked_column.append(val)
+                    continue
+
             masked_column.append(f"{val}{mask_value}")
-        elif pattern == "Email":
+        return masked_column
+
+    elif pattern == "Email":
+        masked_column = []
+        for val in column:
+            # Apply Masking Value Filter only for Email
+            if masking_value_filter and pd.notna(masking_value_filter):
+                try:
+                    if not eval(masking_value_filter, {"value": str(val)}):
+                        masked_column.append(val)
+                        continue  # Skip the rest of the masking logic for this value
+                except Exception as e:
+                    print(f"Error evaluating masking value filter '{masking_value_filter}': {e}")
+                    masked_column.append(val)
+                    continue
+
             masked_column.append(mask_email(str(val)) if pd.notna(val) else val)
-        elif pattern == "Null":
+        return masked_column
+
+    elif pattern == "Null":
+        masked_column = []
+        for val in column:
+            # Apply Masking Value Filter only for Null
+            if masking_value_filter and pd.notna(masking_value_filter):
+                try:
+                    if not eval(masking_value_filter, {"value": str(val)}):
+                        masked_column.append(val)
+                        continue  # Skip the rest of the masking logic for this value
+                except Exception as e:
+                    print(f"Error evaluating masking value filter '{masking_value_filter}': {e}")
+                    masked_column.append(val)
+                    continue
+
             masked_column.append(None)
-        elif pattern == "Referenced File":
-            # Logic for masking based on a referenced file
-            if referenced_data is not None and condition_columns is not None and referenced_columns is not None and main_df is not None and output_column is not None:
-                if len(condition_columns) != len(referenced_columns):
-                    print(f"Error: Condition columns and referenced columns must have the same length.")
-                    masked_column.append(val)
-                    continue
+        return masked_column
 
-                masked_column_val_index = list(column.index[column == val])
+    elif pattern == "Referenced File":
+        if referenced_data is not None and condition_columns is not None and referenced_columns is not None and main_df is not None and output_column is not None:
+            if len(condition_columns) != len(referenced_columns):
+                print(f"Error: Condition columns and referenced columns must have the same length.")
+                return column  # Return original column if lengths don't match
 
-                if len(masked_column_val_index) == 0:
-                    masked_column.append(val)
-                    continue
-
-                masked_column_val_index = masked_column_val_index[0]
-
+            masked_column = []
+            for idx, value in enumerate(column):
                 match_found = False
                 for ref_row in referenced_data:
                     match = True
                     for cond_col, ref_col in zip(condition_columns, referenced_columns):
-                        try:
-                            cond_value = main_df[cond_col].iloc[masked_column_val_index]
-                        except IndexError:
+                        cond_value = main_df[cond_col].iloc[idx]
+                        if pd.isna(cond_value):
                             match = False
                             break
-
-                        ref_val = ref_row.get(ref_col)
-
-                        if pd.isna(cond_value) or ref_val is None:
+                        if condition_type == "Equals" and ref_row.get(ref_col) != cond_value:
                             match = False
                             break
-
-                        if condition_type == "Equals":
-                            if str(ref_val).lower() != str(cond_value).lower():
-                                match = False
-                                break
-                        elif condition_type == "Contains":
-                            if not (str(ref_val).lower() in str(cond_value).lower() or str(cond_value).lower() in str(ref_val).lower()):
-                                match = False
-                                break
-                        except Exception as e:
-                            print(f"Error comparing values: {e}")
+                        elif condition_type == "Contains" and str(ref_row.get(ref_col, "")) not in str(cond_value):
                             match = False
                             break
-
                     if match:
                         masked_column.append(ref_row[output_column])
                         match_found = True
                         break
                 if not match_found:
-                    masked_column.append(val)
-            else:
-                masked_column.append(val)
-        else:
-            masked_column.append(val) # If the pattern is not found, the original value is appended.
-    return masked_column
+                    masked_column.append(value)  # Keep original value if no match found
+            return masked_column
+        return column  # Default: No masking if pattern is unknown
 
 def read_referenced_file(file_path, sheet_name):
     """Read the referenced file and return the data as a list of dictionaries."""
@@ -124,7 +157,7 @@ def mask_excel_file(file_path, header_row, rules):
         # Read the main dataset into a pandas DataFrame
         main_df = pd.read_excel(file_path, header=header_row - 1)
 
-        # Add temporary columns for referenced-based masking, if needed
+        # Add temporary columns for referenced-based masking
         for column_name, pattern, _, _, referenced_file_path, referenced_sheet, condition_column, referenced_column, _, include_in_output, _ in rules:
             if include_in_output == "No" and column_name not in main_df.columns:
                 main_df[column_name] = None  # Add temporary column with None values
@@ -150,10 +183,11 @@ def mask_excel_file(file_path, header_row, rules):
         columns_to_remove = [column_name for column_name, _, _, _, _, _, _, _, _, include_in_output, _ in rules if include_in_output == "No"]
         main_df.drop(columns=columns_to_remove, inplace=True)
 
-        # Write the masked data back to the Excel file using openpyxl for formatting preservation
+        # Save masked file using openpyxl to preserve formatting
         wb = openpyxl.load_workbook(file_path)
         sheet = wb.active
 
+        # Write the masked data back to the Excel file
         for row_idx, row in enumerate(main_df.itertuples(index=False), start=header_row + 1):
             # Check for empty row using openpyxl
             excel_row = sheet[row_idx]
@@ -164,7 +198,7 @@ def mask_excel_file(file_path, header_row, rules):
             for col_idx, value in enumerate(row, start=1):
                 sheet.cell(row=row_idx, column=col_idx, value=value)
 
-        # Save masked file in a new folder named "Masked_Files"
+        # Save masked file in a new folder
         base_dir = os.path.dirname(file_path)
         masked_folder = os.path.join(base_dir, "Masked_Files")
         os.makedirs(masked_folder, exist_ok=True)
