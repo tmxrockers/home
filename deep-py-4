@@ -172,16 +172,19 @@ def mask_excel_file(file_path: str, header_row: int, rules: List[tuple]) -> None
         wb = openpyxl.load_workbook(file_path)
         sheet = wb.active
 
-        # Write the masked data back to the Excel file
-        for row_idx, row in enumerate(main_df.itertuples(index=False), start=header_row + 1):
+        # Write the masked data back to the Excel file using sheet.iter_rows and index
+        for row_idx, row in enumerate(sheet.iter_rows(min_row=header_row + 1), start=header_row + 1):
             # Check for empty row using openpyxl
-            excel_row = sheet[row_idx]
-            if all(cell.value is None or str(cell.value).strip() == "" for cell in excel_row):
+            if all(cell.value is None or str(cell.value).strip() == "" for cell in row):
                 print(f"Row {row_idx} is empty or contains only blank values (openpyxl). Exiting masking process.")
                 break  # Exit the loop if the row is empty
 
-            for col_idx, value in enumerate(row, start=1):
-                sheet.cell(row=row_idx, column=col_idx, value=value)
+            for col_idx, cell in enumerate(row, start=1):
+                try:
+                    cell.value = main_df.iloc[row_idx - header_row, col_idx - 1]
+                except IndexError:
+                    print(f"IndexError at Row: {row_idx}, Column: {col_idx}. Main_df index out of range")
+                    break
 
         # Save masked file in a new folder
         base_dir = os.path.dirname(file_path)
