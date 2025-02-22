@@ -173,5 +173,3 @@ def mask_excel_file(file_path, header_row, rules):
 
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
-
-#
