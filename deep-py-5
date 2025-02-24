@@ -1,0 +1,219 @@
+import openpyxl
+import os
+import random
+# from ayx import Alteryx  # Alteryx-specific library
+import pandas as pd
+
+# Read metadata from Alteryx input
+# Read metadata from Alteryx input
+metadata_df = pd.read_excel("DataMasking3.xlsx", sheet_name=0)
+
+# Convert metadata into a dictionary grouped by Workflow Type and File Path
+grouped_rules = metadata_df.groupby(["Workflow Type", "File Path", "Header Row"])
+
+
+def mask_email(value):
+    """Mask an email address while keeping the domain intact."""
+    if "@" in value:
+        username, domain = value.split("@", 1)
+        masked_username = "".join("x" if c.isalpha() else c for c in username)
+        return f"{masked_username}@{domain}"
+    return value  # Return unchanged if not a valid email
+
+def apply_range_masking(value, range_str):
+    """Applies masking within a specified range from metadata with decimal formatting."""
+    try:
+        if isinstance(value, (int, float)):
+            if '-' in range_str:  # Check if range is in "lower-upper" format
+                range_values = range_str.split("-")
+                if len(range_values) == 2:
+                    lower_bound = float(range_values[0])
+                    upper_bound = float(range_values[1])
+                    random_value = random.uniform(lower_bound, upper_bound)
+                    return round(random_value, random.choice([2, 3]))  # Randomly choose 2 or 3 decimals
+            elif ',' in range_str:  # Check if range is in a more complex format
+                parts = range_str.split(';')
+                for part in parts:
+                    part = part.strip()
+                    if 'range' in part.lower():
+                        condition_part = part.split('range,')[1].strip()
+                        range_parts = condition_part.split(',')
+                        if len(range_parts) >= 3:
+                            lower_bound = float(range_parts[0])
+                            upper_bound = float(range_parts[1])
+                            multiplier = float(range_parts[2])
+                            random_value = random.uniform(lower_bound, upper_bound) * multiplier
+                            return round(random_value, random.choice([2,3]))
+                    elif 'eq' in part.lower():
+                        condition_part = part.split('eq,')[1].strip()
+                        eq_parts = condition_part.split(',')
+                        if len(eq_parts) >= 1:
+                            multiplier = float(eq_parts[0])
+                            return value * multiplier
+                    elif 'jge' in part.lower():
+                        condition_part = part.split('jge,')[1].strip()
+                        jge_parts = condition_part.split(',')
+                        if len(jge_parts) >= 2:
+                            lower_bound = float(jge_parts[0])
+                            multiplier = float(jge_parts[1])
+                            if value >= lower_bound:
+                                return value * multiplier
+
+            else:
+                print(f"Invalid range format: {range_str}")
+        return value  # Return original value if masking fails
+
+    except Exception as e:
+        print(f"Error applying range masking: {e}")
+        return value
+
+def apply_masking(value, pattern, mask_value, row, column_indices):
+    """Apply different masking patterns."""
+    if value is None or str(value).strip() == "":
+        return value  # Do not mask empty cells
+
+    if pattern == "Constant":
+        return mask_value
+    elif pattern == "Prefix":
+        return f"{mask_value}{value}"
+    elif pattern == "Suffix":
+        return f"{value}{mask_value}"
+    elif pattern == "Email":
+        return mask_email(str(value))
+    elif pattern == "Range":
+        return apply_range_masking(value, mask_value)
+    elif pattern == "Null":
+        return None
+    return value  # Default: No masking if pattern is unknown
+
+
+def is_row_empty(row):
+    """Check if all values in a row are NULL or empty."""
+    return all(cell.value is None or str(cell.value).strip() == "" for cell in row)
+
+
+def ensure_text_format(sheet, header_row):
+    """Ensure all data is treated as text to prevent Alteryx misinterpretation."""
+    for row in sheet.iter_rows(min_row=header_row + 1):
+        for cell in row:
+            if isinstance(cell.value, (int, float)):
+                continue
+            elif isinstance(cell.value, str) and "MM/dd/yyyy" in cell.number_format:
+                cell.value = str(cell.value)
+                cell.number_format = "@"
+            elif isinstance(cell.value, str):
+                cell.value = cell.value.strip()
+            cell.number_format = "@"
+
+
+def ensure_valid_headers(sheet, header_row):
+    """Ensure headers are correctly formatted as strings to avoid Alteryx issues."""
+    headers = []
+    for cell in sheet[header_row]:
+        if isinstance(cell.value, (int, float)):
+            cell.value = f"Column {cell.column}"
+        elif cell.value is None or str(cell.value).strip() == "":
+            cell.value = f"Column {cell.column}"
+        else:
+            cell.value = str(cell.value).strip()
+        cell.number_format = "@"
+        headers.append(cell.value)
+    return headers
+
+def evaluate_filter_condition(row, filter_condition, column_indices):
+    """Dynamically evaluates the filter condition for any column."""
+    try:
+        parts = filter_condition.split(';')
+        results = []
+        operator = 'AND'  # Default operator
+
+        for part in parts:
+            part = part.strip()
+            if part.upper() == 'OR':
+                operator = 'OR'
+            elif part.upper() == 'AND':
+                operator = 'AND'
+            else:
+                condition_parts = part.split(',')
+                if len(condition_parts) == 3:
+                    column_name, operator_str, value = [p.strip().strip("'") for p in condition_parts]
+                    col_idx = column_indices.get(column_name)
+                    if col_idx is not None:
+                        cell_value = row[col_idx - 1].value
+                        if operator_str == 'eq':
+                            results.append(cell_value == value)
+                        elif operator_str == 'gt':
+                            results.append(cell_value > float(value))
+                        elif operator_str == 'lt':
+                            results.append(cell_value < float(value))
+                        elif operator_str == 'contains':
+                            results.append(value in str(cell_value))
+                        elif operator_str == 'startswith':
+                            results.append(str(cell_value).startswith(value))
+                        elif operator_str == 'endswith':
+                            results.append(str(cell_value).endswith(value))
+
+        if operator == 'OR':
+            return any(results)
+        else:
+            return all(results)
+
+    except Exception as e:
+        print(f"Error evaluating filter condition: {e}")
+        return False
+
+
+def mask_excel_file(file_path, header_row, rules):
+    """Mask Excel data while handling NULL row scenarios."""
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active  # Use the first sheet by default
+
+        # Process headers
+        headers = ensure_valid_headers(sheet, header_row)
+        ensure_text_format(sheet, header_row)  # Convert date-formatted cells to text
+
+        column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+
+        previous_row_empty = False  # Flag to track empty row condition
+
+        for row in sheet.iter_rows(min_row=header_row + 1):
+            if is_row_empty(row):
+                previous_row_empty = True
+                continue  # Skip masking for empty rows
+
+            if previous_row_empty:
+                print("Skipping masking due to NULL row condition.")
+                break  # Stop masking if previous row was empty
+
+            for column_name, pattern, mask_value, filter_condition in rules:  # Removed condition
+                col_idx = column_indices.get(column_name)
+                if col_idx:
+                    cell = row[col_idx - 1]
+
+                    # Apply filter condition to all patterns
+                    if pd.notna(filter_condition):
+                        if evaluate_filter_condition(row, filter_condition, column_indices):
+                            cell.value = apply_masking(cell.value, pattern, mask_value, row, column_indices)
+                    else:
+                        cell.value = apply_masking(cell.value, pattern, mask_value, row, column_indices)
+
+        # Save masked file in a new folder
+        base_dir = os.path.dirname(file_path)
+        masked_folder = os.path.join(base_dir, "Masked_Files")
+        os.makedirs(masked_folder, exist_ok=True)  # Create only if not exists
+
+        output_file = os.path.join(masked_folder, os.path.basename(file_path))
+        wb.save(output_file)
+
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+
+# Process each workflow type and file separately
+for (workflow_type, file_path, header_row), group in grouped_rules:
+    masking_rules = list(zip(group["Column Name"], group["Masking Pattern"], group["Masking Value"],
+                                group["Masking Value Filter"]))  # Removed condition
+    mask_excel_file(file_path, int(header_row), masking_rules)
