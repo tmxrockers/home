@@ -175,3 +175,93 @@ Remember, the "Range" condition (labeled as "Conditional" in your image) allows 
 
 These examples should further clarify how the "Range" condition works within your data masking process.
 
+
+Absolutely! Let's break down each masking pattern and its logic, along with examples, based on the code and the metadata you've provided.
+
+**Masking Patterns and Logic**
+
+1.  **Constant:**
+
+    * **Logic:** Replaces the original cell value with the specified `Masking Value`.
+    * **Metadata Example:**
+        * `Masking Pattern`: `Constant`
+        * `Masking Value`: `Candidate, Name`
+    * **Example Data:**
+        * Input: `Contractor`: `John Doe`
+        * Output: `Contractor`: `Candidate, Name`
+
+2.  **Prefix:**
+
+    * **Logic:** Adds the `Masking Value` to the beginning of the original cell value.
+    * **Metadata Example:**
+        * `Masking Pattern`: `Prefix`
+        * `Masking Value`: `PREFIX_`
+    * **Example Data:**
+        * Input: `EmployeeID`: `12345`
+        * Output: `EmployeeID`: `PREFIX_12345`
+
+3.  **Suffix:**
+
+    * **Logic:** Adds the `Masking Value` to the end of the original cell value.
+    * **Metadata Example:**
+        * `Masking Pattern`: `Suffix`
+        * `Masking Value`: `_PR`
+    * **Example Data:**
+        * Input: `Contractor ID`: `12345`
+        * Output: `Contractor ID`: `12345_PR`
+
+4.  **Email:**
+
+    * **Logic:** Masks the username portion of an email address while keeping the domain intact.
+    * **Metadata Example:**
+        * `Masking Pattern`: `Email`
+        * `Masking Value`: (Not used)
+    * **Example Data:**
+        * Input: `Email`: `john.doe@example.com`
+        * Output: `Email`: `jxxxx.xxx@example.com`
+
+5.  **Range (Conditional):**
+
+    * **Logic:** Applies complex numeric masking based on ranges and multipliers.
+    * **Metadata Example:**
+        * `Masking Pattern`: `Conditional` (treated as Range)
+        * `Masking Value`: `eq,0,1,0, age, 0-20,2.0;range, 20-50,1.1; range, 53-56,1.0;jge,56,0.8`
+    * **Example Data:**
+        * Input: `Current Bill Rate (ST/Hr)`: `0`, `Age`: `30`
+        * Output: `Current Bill Rate (ST/Hr)`: `0` (eq,0,1.0)
+        * Input: `Current Bill Rate (ST/Hr)`: `30`, `Age`: `30`
+        * Output: `Current Bill Rate (ST/Hr)`: Random number between 20 and 50, multiplied by 1.1.
+        * Input: `Current Bill Rate (ST/Hr)`: `60`, `Age`: `60`
+        * Output: `Current Bill Rate (ST/Hr)`: `60 * 0.8 = 48`
+
+6.  **Null:**
+
+    * **Logic:** Replaces the original cell value with `None` (NULL).
+    * **Metadata Example:**
+        * `Masking Pattern`: `Null`
+        * `Masking Value`: (Not used)
+    * **Example Data:**
+        * Input: `PhoneNumber`: `123-456-7890`
+        * Output: `PhoneNumber`: `None`
+
+**Interactions with Filter Conditions**
+
+* All the patterns can be used in combination with the filter conditions.
+* The filter conditions decide if the masking pattern is applied to the cell or not.
+* If the filter condition is met, then the masking pattern is applied.
+* If the filter condition is not met, then the original value of the cell is kept.
+
+**Example with Filter:**
+
+* **Metadata:**
+    * `Masking Pattern`: `Suffix`
+    * `Masking Value`: `_PR`
+    * `Masking Value Filter`: `Country,eq,'USA'`
+* **Example Data:**
+    * Input: `Contractor ID`: `12345`, `Country`: `USA`
+    * Output: `Contractor ID`: `12345_PR`
+    * Input: `Contractor ID`: `12345`, `Country`: `Canada`
+    * Output: `Contractor ID`: `12345` (No change)
+
+This comprehensive overview should give you a clear understanding of each masking pattern and how they work within the data masking process.
+
