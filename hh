@@ -110,3 +110,68 @@ The filter condition is a string that specifies one or more conditions that must
 * The condition is evaluated from left to right.
 
 I hope this thorough explanation and set of examples are helpful!
+
+
+
+
+
+Right, let's add specific examples of the "Range" (or "Conditional" as it's labeled in your image) condition to the list, with a focus on how it interacts with the filter conditions.
+
+**Range (Conditional) Condition Examples**
+
+Remember, the "Range" condition (labeled as "Conditional" in your image) allows for complex numeric masking based on ranges and multipliers.
+
+**1. Simple Range with Filter**
+
+* **Metadata:**
+    * `Masking Pattern`: `Conditional`
+    * `Masking Value`: `10-20`
+    * `Masking Value Filter`: `Country,eq,'USA'`
+* **Explanation:** If the "Country" is "USA", generate a random number between 10 and 20 (inclusive).
+* **Example Data:**
+    * `Country`: "USA", `Value`: 15 (Output: a random number between 10 and 20)
+    * `Country`: "Canada", `Value`: 15 (Output: 15 - no change)
+
+**2. Complex Range with Multiple Conditions**
+
+* **Metadata:**
+    * `Masking Pattern`: `Conditional`
+    * `Masking Value`: `eq,0,1.0;range,20,50,1.1;jge,56,0.8`
+    * `Masking Value Filter`: `Country,eq,'USA';OR;Country,eq,'IND'`
+* **Explanation:**
+    * If the "Country" is "USA" or "IND", apply the following:
+        * If the value is 0, multiply it by 1.0 (no change).
+        * If the value is between 20 and 50, generate a random number in that range and multiply it by 1.1.
+        * If the value is greater than or equal to 56, multiply it by 0.8.
+* **Example Data:**
+    * `Country`: "USA", `Value`: 0 (Output: 0)
+    * `Country`: "IND", `Value`: 30 (Output: a random number between 20 and 50, multiplied by 1.1)
+    * `Country`: "USA", `Value`: 60 (Output: 60 * 0.8 = 48)
+    * `Country`: "Canada", `Value`: 30 (Output: 30 - no change)
+
+**3. Range with Age-Based Conditions**
+
+* **Metadata:**
+    * `Masking Pattern`: `Conditional`
+    * `Masking Value`: `age,0-20,2.0;range,20-50,1.1;jge,56,0.8`
+    * `Masking Value Filter`: `Country,eq,'USA';OR;Country,eq,'IND'`
+* **Explanation:**
+    * If the "Country" is "USA" or "IND", apply the following based on the "Age" column:
+        * If "Age" is between 0 and 20, generate a random number between 0 and 20, and multiply that random number by 2.0.
+        * If "Age" is between 20 and 50, generate a random number between 20 and 50, and multiply that random number by 1.1.
+        * If "Age" is greater than or equal to 56, multiply the original value by 0.8.
+* **Example Data:**
+    * `Country`: "USA", `Age`: 18, `Value`: 10 (Output: a random number between 0 and 20, multiplied by 2.0)
+    * `Country`: "IND", `Age`: 35, `Value`: 30 (Output: a random number between 20 and 50, multiplied by 1.1)
+    * `Country`: "USA", `Age`: 60, `Value`: 60 (Output: 60 * 0.8 = 48)
+    * `Country`: "Canada", `Age`: 35, `Value`: 30 (Output: 30 - no change)
+
+**Key Considerations for Range Conditions:**
+
+* The "Range" condition is specifically for numeric data.
+* The filter conditions determine when the range masking is applied.
+* The code uses random.choice([2,3]) to get either 2 or 3 decimal places.
+* When using the age based logic, the age column must be present in the excel file.
+
+These examples should further clarify how the "Range" condition works within your data masking process.
+
