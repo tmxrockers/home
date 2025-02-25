@@ -265,3 +265,71 @@ Absolutely! Let's break down each masking pattern and its logic, along with exam
 
 This comprehensive overview should give you a clear understanding of each masking pattern and how they work within the data masking process.
 
+
+
+
+Yes, let's break down each range condition with detailed explanations and examples:
+
+**1. Simple Range (Lower-Upper):**
+
+* **Format:** `lower-upper` (e.g., `10-50`) or `lower-upper-decimals` (e.g., `10-50-3`)
+* **Explanation:** This format generates a random floating-point number between the `lower` and `upper` bounds (inclusive).
+    * If `decimals` are provided, the result is rounded to that number of decimal places.
+    * If `decimals` are not provided, the result is rounded to 2 decimal places by default.
+* **Example:**
+    * **Metadata:**
+        * `Masking Pattern`: `Range`
+        * `Masking Value`: `20-80`
+    * **Input Data:**
+        * `Value`: `55`
+    * **Output Data:**
+        * `Value`: A random number between 20 and 80, rounded to 2 decimal places (e.g., `63.78`).
+    * **Metadata:**
+        * `Masking Pattern`: `Range`
+        * `Masking Value`: `20-80-3`
+    * **Input Data:**
+        * `Value`: `55`
+    * **Output Data:**
+        * `Value`: A random number between 20 and 80, rounded to 3 decimal places (e.g., `63.789`).
+
+**2. Complex Range (Conditional Ranges and Multipliers):**
+
+* **Format:** `eq,value,multiplier;range,lower,upper,multiplier,decimals;jge,lower,multiplier`
+* **Explanation:** This format allows for multiple conditions separated by semicolons (`;`).
+    * **`eq,value,multiplier`:** If the input value is exactly equal to `value`, it's multiplied by `multiplier`.
+    * **`range,lower,upper,multiplier,decimals`:** If the input value falls within the `lower-upper` range, a random number is generated within that range, multiplied by `multiplier`, and rounded to the specified `decimals`. if decimals are not provided it defaults to 2.
+    * **`jge,lower,multiplier`:** If the input value is greater than or equal to `lower`, it's multiplied by `multiplier`.
+* **Example:**
+    * **Metadata:**
+        * `Masking Pattern`: `Range`
+        * `Masking Value`: `eq,0,1.0;range,30,60,1.2,3;jge,100,0.9`
+    * **Input Data:**
+        * `Value`: `0`
+    * **Output Data:**
+        * `Value`: `0` (0 * 1.0 = 0)
+    * **Input Data:**
+        * `Value`: `45`
+    * **Output Data:**
+        * `Value`: A random number between 30 and 60, multiplied by 1.2, rounded to 3 decimal places (e.g., `54.321`).
+    * **Input Data:**
+        * `Value`: `120`
+    * **Output Data:**
+        * `Value`: `108` (120 * 0.9 = 108)
+    * **Metadata:**
+        * `Masking Pattern`: `Range`
+        * `Masking Value`: `eq,0,1.0;range,30,60,1.2;jge,100,0.9`
+    * **Input Data:**
+        * `Value`: `45`
+    * **Output Data:**
+        * `Value`: A random number between 30 and 60, multiplied by 1.2, rounded to 2 decimal places (e.g., `54.32`).
+
+**Key Points:**
+
+* The complex range format is parsed using semicolons (`;`) to separate the different conditions.
+* The individual conditions are parsed using commas (`,`).
+* `eq` stands for equals.
+* `jge` stands for greater than or equals.
+* `range` stands for a range of random values.
+* The code uses `random.uniform()` to generate random floats within the specified ranges.
+* The code uses `round()` to have the desired number of decimal places.
+* If decimal places are not provided, the code defaults to rounding to 2 decimal places.
