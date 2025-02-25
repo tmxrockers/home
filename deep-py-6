@@ -266,3 +266,69 @@ def evaluate_filter_condition(row, filter_condition, column_indices):
     except Exception as e:
         print(f"Error evaluating filter condition: {e}")
         return False
+
+
+
+
+
+
+import random
+
+def apply_range_masking(value, range_str):
+    """Applies masking within a specified range from metadata with optional decimal formatting."""
+    try:
+        if isinstance(value, (int, float)):
+            if '-' in range_str:  # Check if range is in "lower-upper" format
+                range_values = range_str.split("-")
+                if len(range_values) >= 2:
+                    lower_bound = float(range_values[0])
+                    upper_bound = float(range_values[1])
+                    decimal_places = 2  # Default to 2 decimal places
+                    if len(range_values) == 3:
+                        try:
+                            decimal_places = int(range_values[2])
+                        except ValueError:
+                            print(f"Invalid decimal places value: {range_values[2]}. Using default 2.")
+                    random_value = random.uniform(lower_bound, upper_bound)
+                    return round(random_value, decimal_places)
+            elif ',' in range_str:  # Check if range is in a more complex format
+                parts = range_str.split(';')
+                for part in parts:
+                    part = part.strip()
+                    if 'range' in part.lower():
+                        condition_part = part.split('range,')[1].strip()
+                        range_parts = condition_part.split(',')
+                        if len(range_parts) >= 3:
+                            lower_bound = float(range_parts[0])
+                            upper_bound = float(range_parts[1])
+                            multiplier = float(range_parts[2])
+                            decimal_places = 2 # default to 2 decimal places
+                            if len(range_parts) >= 4:
+                                try:
+                                    decimal_places = int(range_parts[3])
+                                except ValueError:
+                                    print(f"Invalid decimal places value: {range_parts[3]}. Using default 2.")
+                            random_value = random.uniform(lower_bound, upper_bound) * multiplier
+                            return round(random_value, decimal_places)
+                    elif 'eq' in part.lower():
+                        condition_part = part.split('eq,')[1].strip()
+                        eq_parts = condition_part.split(',')
+                        if len(eq_parts) >= 1:
+                            multiplier = float(eq_parts[0])
+                            return value * multiplier
+                    elif 'jge' in part.lower():
+                        condition_part = part.split('jge,')[1].strip()
+                        jge_parts = condition_part.split(',')
+                        if len(jge_parts) >= 2:
+                            lower_bound = float(jge_parts[0])
+                            multiplier = float(jge_parts[1])
+                            if value >= lower_bound:
+                                return value * multiplier
+
+            else:
+                print(f"Invalid range format: {range_str}")
+        return value  # Return original value if masking fails
+
+    except Exception as e:
+        print(f"Error applying range masking: {e}")
+        return value
