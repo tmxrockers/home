@@ -188,3 +188,81 @@ for (workflow_type, file_path, header_row), group in grouped_rules:
     masking_rules = list(zip(group["Column Name"], group["Masking Pattern"], group["Masking Value"],
                                     group["Masking Value Filter"]))
     mask_excel_file(file_path, int(header_row), masking_rules)
+
+
+
+
+def evaluate_filter_condition(row, filter_condition, column_indices):
+    """Evaluates filter conditions with case-insensitive operators, space removal, and validation."""
+    try:
+        parts = filter_condition.split(';')
+        results = []
+        operator = 'AND'  # Default operator
+
+        for part in parts:
+            part = part.strip()
+            if part.upper() == 'OR':
+                operator = 'OR'
+            elif part.upper() == 'AND':
+                operator = 'AND'
+            else:
+                condition_parts = part.split(',')
+                if len(condition_parts) != 3:
+                    print(f"Invalid condition format: {part}. Expected 3 parts (Column, Operator, Value).")
+                    return False  # Skip this condition if invalid
+
+                column_name, operator_str, value = [p.strip().strip("'") for p in condition_parts]
+                col_idx = column_indices.get(column_name)
+                if col_idx is None:
+                    print(f"Column '{column_name}' not found.")
+                    return False  # Skip this condition if column not found
+
+                cell_value = row[col_idx - 1].value
+                operator_str_lower = operator_str.lower().replace(' ', '') # Remove spaces
+
+                if operator_str_lower == 'equals':
+                    results.append(str(cell_value).lower() == str(value).lower())
+                elif operator_str_lower in ['notequals', 'not_equals']:
+                    results.append(str(cell_value).lower() != str(value).lower())
+                elif operator_str_lower in ['greaterthan', 'greater_than']:
+                    try:
+                        results.append(cell_value > float(value))
+                    except ValueError:
+                        print(f"Invalid numeric value '{value}' for 'greater than' comparison.")
+                        return False
+                elif operator_str_lower in ['greaterthanorequalto', 'greater_than_or_equal_to', 'greaterthanorequalsto', 'greater_than_or_equals_to']:
+                    try:
+                        results.append(cell_value >= float(value))
+                    except ValueError:
+                        print(f"Invalid numeric value '{value}' for 'greater than or equal to' comparison.")
+                        return False
+                elif operator_str_lower in ['lessthan', 'less_than']:
+                    try:
+                        results.append(cell_value < float(value))
+                    except ValueError:
+                        print(f"Invalid numeric value '{value}' for 'less than' comparison.")
+                        return False
+                elif operator_str_lower in ['lessthanorequalto', 'less_than_or_equal_to', 'lessthanorequalsto', 'less_than_or_equals_to']:
+                    try:
+                        results.append(cell_value <= float(value))
+                    except ValueError:
+                        print(f"Invalid numeric value '{value}' for 'less than or equal to' comparison.")
+                        return False
+                elif operator_str_lower == 'contains':
+                    results.append(str(value).lower() in str(cell_value).lower())
+                elif operator_str_lower in ['startswith', 'starts_with']:
+                    results.append(str(cell_value).lower().startswith(str(value).lower()))
+                elif operator_str_lower in ['endswith', 'ends_with']:
+                    results.append(str(cell_value).lower().endswith(str(value).lower()))
+                else:
+                    print(f"Invalid operator: '{operator_str}'. Supported operators are: equals, not equals, greater than, less than, contains, starts with, ends with.")
+                    return False #Skip condition if operator is invalid.
+
+        if operator == 'OR':
+            return any(results)
+        else:
+            return all(results)
+
+    except Exception as e:
+        print(f"Error evaluating filter condition: {e}")
+        return False
