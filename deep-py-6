@@ -332,3 +332,76 @@ def apply_range_masking(value, range_str):
     except Exception as e:
         print(f"Error applying range masking: {e}")
         return value
+
+
+
+
+
+
+
+
+
+
+
+import openpyxl
+import os
+import datetime
+import pandas as pd
+
+# ... (other functions: mask_email, apply_range_masking, apply_masking, etc.) ...
+
+def mask_excel_file(file_path, header_row, rules, output_dir): # Added output_dir
+    try:
+        wb = openpyxl.load_workbook(file_path)
+        sheet = wb.active
+        headers = ensure_valid_headers(sheet, header_row)
+        ensure_text_format(sheet, header_row)
+        column_indices = {col: idx + 1 for idx, col in enumerate(headers)}
+        previous_row_empty = False
+        for row in sheet.iter_rows(min_row=header_row + 1):
+            if is_row_empty(row):
+                previous_row_empty = True
+                continue
+            if previous_row_empty:
+                print("Skipping due to NULL row.")
+                break
+            for column_name, pattern, mask_value, filter_condition in rules:
+                col_idx = column_indices.get(column_name)
+                if col_idx:
+                    cell = row[col_idx - 1]
+                    if pd.notna(filter_condition):
+                        if evaluate_filter_condition(row, filter_condition, column_indices):
+                            cell.value = apply_masking(cell.value, pattern, mask_value, row, column_indices)
+                    else:
+                        cell.value = apply_masking(cell.value, pattern, mask_value, row, column_indices)
+
+        output_file = os.path.join(output_dir, os.path.basename(file_path)) #output file path
+
+        wb.save(output_file)
+        print(f"Masked file saved: {output_file}")
+
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
+
+# Read metadata from Excel
+metadata_df = pd.read_excel("DataMasking2.xlsx", sheet_name=0)
+
+# Group metadata rules
+grouped_rules = metadata_df.groupby(["Workflow Type", "File Path", "Header Row"])
+
+for (workflow_type, file_path, header_row), group in grouped_rules:
+    masking_rules = list(zip(group["Column Name"], group["Masking Pattern"], group["Masking Value"],
+                                    group["Masking Value Filter"]))
+
+    base_dir = os.path.dirname(file_path)
+    masked_folder = os.path.join(base_dir, "Masked_Files")
+    os.makedirs(masked_folder, exist_ok=True)
+
+    # Create a folder with workflow type and timestamp
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
+    workflow_folder = os.path.join(masked_folder, f"{workflow_type}_{timestamp}")
+    os.makedirs(workflow_folder, exist_ok=True)
+
+    mask_excel_file(file_path, int(header_row), masking_rules, workflow_folder) #Pass workflow_folder
+
