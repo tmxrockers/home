@@ -1,0 +1,37 @@
+Finance Hierarchy Changes Documentation
+1. Overview
+The finance hierarchy changes, discussed with the business team (Ashwani and Sundeep), will impact around 1,000 resources. These changes will be implemented in RDR (presumably a system or platform) and subsequently pushed to GRM through an RDR job. Following the implementation of these changes, there will be a sequence of actions involving ETL processes and possible corrective actions by the business team in case of discrepancies.
+
+2. Process Flow
+RDR to GRM Sync:
+
+Once the finance hierarchy changes are implemented in RDR, they will be pulled into GRM through an RDR Job (a DB Stored Procedure in the GRM schema).
+ETL Job for SP/ITCI Hierarchy:
+
+After the changes are synchronized from RDR to GRM, the Daily Scheduled SP/ITCI Hierarchy ETL job will run. This job will refresh the entire SP/ITCL Universal Set with the latest hierarchy information.
+Discrepancy Handling:
+
+In case of discrepancies (such as changes in the cost center), the business team will be responsible for running a baseline load to ensure the appropriate hierarchy information is applied.
+F29 Reference Table:
+
+The F29 Reference table in the production environment is already up to date with the VS hierarchy. However, if additional hierarchies like VST/VSTA need to be added, the business team can add them on the fly and run the incremental ETL to refresh the Universal Set with the latest F29 information.
+Finance Forecast and Drill-down Reports:
+
+Finance Forecast and Finance Forecast Drill-down reports (2 Dot, 3 Dot, 4 Dot) are loaded monthly. During each load, the existing data will be deleted, and fresh data will be loaded.
+After the RDR Hierarchy implementation, these updates will be applied to the source file data, and the updated data can be uploaded into the system. Hence, no action is required for these reports.
+3. Actions and Responsibilities
+Technical Side:
+No Code Changes: No code changes are required for these updates.
+Tech Sanity Check: A technical sanity check will be performed with the help of the Production support team. This will involve verifying the data and ensuring that the process runs smoothly after the implementation.
+Business Side:
+No Action Required (if No Discrepancies):
+
+If there are no discrepancies in the data, no further action is required from the business side. The scheduled ETL job will automatically refresh the Universal Set with the latest ROR hierarchy information.
+Action Required (if Discrepancies Exist):
+
+If there are any discrepancies (such as issues with the cost center data), the business team may need to perform the following:
+Baseline Load: Run a baseline load to ensure the correct hierarchy information is applied.
+129 Configuration Update (if needed): If required, update the 129 configuration to align with the correct hierarchy.
+4. Conclusion
+The finance hierarchy changes are expected to have minimal impact on business operations, as the system will handle the majority of updates automatically.
+The main responsibility for the business side will be to handle discrepancies, which can be managed through baseline loads and configuration updates if necessary.
