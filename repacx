@@ -1,5 +1,95 @@
+package com.example.dto;
+
+public class ReportUsageCount {
+    private long reportId;
+    private long accessCount;
+
+    public ReportUsageCount(long reportId, long accessCount) {
+        this.reportId = reportId;
+        this.accessCount = accessCount;
+    }
+
+    public long getReportId() {
+        return reportId;
+    }
+
+    public void setReportId(long reportId) {
+        this.reportId = reportId;
+    }
+
+    public long getAccessCount() {
+        return accessCount;
+    }
+
+    public void setAccessCount(long accessCount) {
+        this.accessCount = accessCount;
+    }
+}
+
+
+
+
+
+
+package com.example.dto;
+
+import java.util.List;
+
+public class ReportUsageSummaryResponse {
+    private List<ReportUsageCount> overall;
+    private List<ReportUsageCount> lastMonth;
+    private List<ReportUsageCount> lastThreeMonths;
+    private List<ReportUsageCount> currentMonth;
+
+    public ReportUsageSummaryResponse(List<ReportUsageCount> overall,
+                                      List<ReportUsageCount> lastMonth,
+                                      List<ReportUsageCount> lastThreeMonths,
+                                      List<ReportUsageCount> currentMonth) {
+        this.overall = overall;
+        this.lastMonth = lastMonth;
+        this.lastThreeMonths = lastThreeMonths;
+        this.currentMonth = currentMonth;
+    }
+
+    public List<ReportUsageCount> getOverall() {
+        return overall;
+    }
+
+    public void setOverall(List<ReportUsageCount> overall) {
+        this.overall = overall;
+    }
+
+    public List<ReportUsageCount> getLastMonth() {
+        return lastMonth;
+    }
+
+    public void setLastMonth(List<ReportUsageCount> lastMonth) {
+        this.lastMonth = lastMonth;
+    }
+
+    public List<ReportUsageCount> getLastThreeMonths() {
+        return lastThreeMonths;
+    }
+
+    public void setLastThreeMonths(List<ReportUsageCount> lastThreeMonths) {
+        this.lastThreeMonths = lastThreeMonths;
+    }
+
+    public List<ReportUsageCount> getCurrentMonth() {
+        return currentMonth;
+    }
+
+    public void setCurrentMonth(List<ReportUsageCount> currentMonth) {
+        this.currentMonth = currentMonth;
+    }
+}
+
+
+
 package com.example.service;
 
+import com.example.dto.ReportUsageCount;
+import com.example.dto.ReportUsageSummaryResponse;
 import com.example.model.TdReportUsageTracking;
 import com.example.repository.TdReportUsageRepository;
 import org.springframework.stereotype.Service;
@@ -8,7 +98,6 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,21 +109,21 @@ public class TdReportUsageService {
         this.repository = repository;
     }
 
-    public Map<String, List<Map<String, Object>>> getUsageSummaryByUser(String userId) {
+    public ReportUsageSummaryResponse getUsageSummaryByUser(String userId) {
         List<TdReportUsageTracking> allData = repository.findByUserId(userId);
 
-        // Get date ranges
+        // Date calculations
         LocalDate today = LocalDate.now();
         LocalDate firstDayOfCurrentMonth = today.with(TemporalAdjusters.firstDayOfMonth());
         LocalDate firstDayOfLastMonth = firstDayOfCurrentMonth.minusMonths(1);
         LocalDate firstDayOfThreeMonthsAgo = firstDayOfCurrentMonth.minusMonths(3);
 
-        // Convert dates to Timestamp for filtering
+        // Convert to Timestamp
         Timestamp currentMonthStart = Timestamp.valueOf(firstDayOfCurrentMonth.atStartOfDay());
         Timestamp lastMonthStart = Timestamp.valueOf(firstDayOfLastMonth.atStartOfDay());
         Timestamp threeMonthsAgoStart = Timestamp.valueOf(firstDayOfThreeMonthsAgo.atStartOfDay());
 
-        // Filtering data based on date conditions
+        // Filter data using Stream API
         List<TdReportUsageTracking> lastMonthData = allData.stream()
                 .filter(r -> r.getLastAccessedAt().after(lastMonthStart) &&
                              r.getLastAccessedAt().before(currentMonthStart))
@@ -48,28 +137,25 @@ public class TdReportUsageService {
                 .filter(r -> r.getLastAccessedAt().after(threeMonthsAgoStart))
                 .collect(Collectors.toList());
 
-        List<TdReportUsageTracking> overallData = allData; // No filtering for overall
+        List<TdReportUsageTracking> overallData = allData; // No filter for overall data
 
-        // Convert data into grouped usage count
-        return Map.of(
-                "overall", groupUsage(overallData),
-                "lastMonth", groupUsage(lastMonthData),
-                "lastThreeMonths", groupUsage(lastThreeMonthsData),
-                "currentMonth", groupUsage(currentMonthData)
+        // Construct DTO response
+        return new ReportUsageSummaryResponse(
+                groupUsage(overallData),
+                groupUsage(lastMonthData),
+                groupUsage(lastThreeMonthsData),
+                groupUsage(currentMonthData)
         );
     }
 
-    private List<Map<String, Object>> groupUsage(List<TdReportUsageTracking> data) {
+    private List<ReportUsageCount> groupUsage(List<TdReportUsageTracking> data) {
         return data.stream()
                 .collect(Collectors.groupingBy(
-                        r -> r.getReportId(),
+                        TdReportUsageTracking::getReportId,
                         Collectors.counting()
                 ))
                 .entrySet().stream()
-                .map(entry -> Map.of(
-                        "reportId", entry.getKey(),
-                        "accessCount", entry.getValue()
-                ))
+                .map(entry -> new ReportUsageCount(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
     }
 }
