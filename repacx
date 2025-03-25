@@ -20,8 +20,8 @@ public class TdReportUsageService {
         this.repository = repository;
     }
 
-    public Map<String, List<Map<String, Object>>> getUsageSummary() {
-        List<TdReportUsageTracking> allData = repository.findAll();
+    public Map<String, List<Map<String, Object>>> getUsageSummaryByUser(String userId) {
+        List<TdReportUsageTracking> allData = repository.findByUserId(userId);
 
         // Get date ranges
         LocalDate today = LocalDate.now();
@@ -29,7 +29,7 @@ public class TdReportUsageService {
         LocalDate firstDayOfLastMonth = firstDayOfCurrentMonth.minusMonths(1);
         LocalDate firstDayOfThreeMonthsAgo = firstDayOfCurrentMonth.minusMonths(3);
 
-        // Convert date to Timestamp for filtering
+        // Convert dates to Timestamp for filtering
         Timestamp currentMonthStart = Timestamp.valueOf(firstDayOfCurrentMonth.atStartOfDay());
         Timestamp lastMonthStart = Timestamp.valueOf(firstDayOfLastMonth.atStartOfDay());
         Timestamp threeMonthsAgoStart = Timestamp.valueOf(firstDayOfThreeMonthsAgo.atStartOfDay());
@@ -62,13 +62,12 @@ public class TdReportUsageService {
     private List<Map<String, Object>> groupUsage(List<TdReportUsageTracking> data) {
         return data.stream()
                 .collect(Collectors.groupingBy(
-                        r -> Map.of("userId", r.getUserId(), "reportId", r.getReportId()),
+                        r -> r.getReportId(),
                         Collectors.counting()
                 ))
                 .entrySet().stream()
                 .map(entry -> Map.of(
-                        "userId", entry.getKey().get("userId"),
-                        "reportId", entry.getKey().get("reportId"),
+                        "reportId", entry.getKey(),
                         "accessCount", entry.getValue()
                 ))
                 .collect(Collectors.toList());
