@@ -1,9 +1,10 @@
 package com.example.service;
 
-import com.example.model.ReportUsageTracking;
-import com.example.repository.ReportUsageRepository;
+import com.example.model.TdReportUsageTracking;
+import com.example.repository.TdReportUsageRepository;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -11,16 +12,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class ReportUsageService {
+public class TdReportUsageService {
 
-    private final ReportUsageRepository repository;
+    private final TdReportUsageRepository repository;
 
-    public ReportUsageService(ReportUsageRepository repository) {
+    public TdReportUsageService(TdReportUsageRepository repository) {
         this.repository = repository;
     }
 
     public Map<String, List<Map<String, Object>>> getUsageSummary() {
-        List<ReportUsageTracking> allData = repository.findAll();
+        List<TdReportUsageTracking> allData = repository.findAll();
 
         // Get date ranges
         LocalDate today = LocalDate.now();
@@ -28,21 +29,26 @@ public class ReportUsageService {
         LocalDate firstDayOfLastMonth = firstDayOfCurrentMonth.minusMonths(1);
         LocalDate firstDayOfThreeMonthsAgo = firstDayOfCurrentMonth.minusMonths(3);
 
+        // Convert date to Timestamp for filtering
+        Timestamp currentMonthStart = Timestamp.valueOf(firstDayOfCurrentMonth.atStartOfDay());
+        Timestamp lastMonthStart = Timestamp.valueOf(firstDayOfLastMonth.atStartOfDay());
+        Timestamp threeMonthsAgoStart = Timestamp.valueOf(firstDayOfThreeMonthsAgo.atStartOfDay());
+
         // Filtering data based on date conditions
-        List<ReportUsageTracking> lastMonthData = allData.stream()
-                .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfLastMonth) &&
-                             r.getLastAccessedAt().toLocalDate().isBefore(firstDayOfCurrentMonth))
+        List<TdReportUsageTracking> lastMonthData = allData.stream()
+                .filter(r -> r.getLastAccessedAt().after(lastMonthStart) &&
+                             r.getLastAccessedAt().before(currentMonthStart))
                 .collect(Collectors.toList());
 
-        List<ReportUsageTracking> currentMonthData = allData.stream()
-                .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfCurrentMonth))
+        List<TdReportUsageTracking> currentMonthData = allData.stream()
+                .filter(r -> r.getLastAccessedAt().after(currentMonthStart))
                 .collect(Collectors.toList());
 
-        List<ReportUsageTracking> lastThreeMonthsData = allData.stream()
-                .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfThreeMonthsAgo))
+        List<TdReportUsageTracking> lastThreeMonthsData = allData.stream()
+                .filter(r -> r.getLastAccessedAt().after(threeMonthsAgoStart))
                 .collect(Collectors.toList());
 
-        List<ReportUsageTracking> overallData = allData; // No filtering for overall
+        List<TdReportUsageTracking> overallData = allData; // No filtering for overall
 
         // Convert data into grouped usage count
         return Map.of(
@@ -53,7 +59,7 @@ public class ReportUsageService {
         );
     }
 
-    private List<Map<String, Object>> groupUsage(List<ReportUsageTracking> data) {
+    private List<Map<String, Object>> groupUsage(List<TdReportUsageTracking> data) {
         return data.stream()
                 .collect(Collectors.groupingBy(
                         r -> Map.of("userId", r.getUserId(), "reportId", r.getReportId()),
