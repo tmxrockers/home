@@ -19,7 +19,7 @@ public class ReportUsageService {
         this.repository = repository;
     }
 
-    public List<Map<String, Object>> getUsage(String type) {
+    public Map<String, List<Map<String, Object>>> getUsageSummary() {
         List<ReportUsageTracking> allData = repository.findAll();
 
         // Get date ranges
@@ -28,28 +28,33 @@ public class ReportUsageService {
         LocalDate firstDayOfLastMonth = firstDayOfCurrentMonth.minusMonths(1);
         LocalDate firstDayOfThreeMonthsAgo = firstDayOfCurrentMonth.minusMonths(3);
 
-        // Filter data using Java Stream
-        List<ReportUsageTracking> filteredData = switch (type.toLowerCase()) {
-            case "last_month" -> allData.stream()
-                    .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfLastMonth) &&
-                                 r.getLastAccessedAt().toLocalDate().isBefore(firstDayOfCurrentMonth))
-                    .collect(Collectors.toList());
+        // Filtering data based on date conditions
+        List<ReportUsageTracking> lastMonthData = allData.stream()
+                .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfLastMonth) &&
+                             r.getLastAccessedAt().toLocalDate().isBefore(firstDayOfCurrentMonth))
+                .collect(Collectors.toList());
 
-            case "current_month" -> allData.stream()
-                    .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfCurrentMonth))
-                    .collect(Collectors.toList());
+        List<ReportUsageTracking> currentMonthData = allData.stream()
+                .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfCurrentMonth))
+                .collect(Collectors.toList());
 
-            case "last_3_months" -> allData.stream()
-                    .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfThreeMonthsAgo))
-                    .collect(Collectors.toList());
+        List<ReportUsageTracking> lastThreeMonthsData = allData.stream()
+                .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfThreeMonthsAgo))
+                .collect(Collectors.toList());
 
-            case "overall" -> allData;  // No filter for overall
+        List<ReportUsageTracking> overallData = allData; // No filtering for overall
 
-            default -> throw new IllegalArgumentException("Invalid type: " + type);
-        };
+        // Convert data into grouped usage count
+        return Map.of(
+                "overall", groupUsage(overallData),
+                "lastMonth", groupUsage(lastMonthData),
+                "lastThreeMonths", groupUsage(lastThreeMonthsData),
+                "currentMonth", groupUsage(currentMonthData)
+        );
+    }
 
-        // Group by userId and reportId, count occurrences
-        return filteredData.stream()
+    private List<Map<String, Object>> groupUsage(List<ReportUsageTracking> data) {
+        return data.stream()
                 .collect(Collectors.groupingBy(
                         r -> Map.of("userId", r.getUserId(), "reportId", r.getReportId()),
                         Collectors.counting()
