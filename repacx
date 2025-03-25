@@ -1,0 +1,65 @@
+package com.example.service;
+
+import com.example.model.ReportUsageTracking;
+import com.example.repository.ReportUsageRepository;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class ReportUsageService {
+
+    private final ReportUsageRepository repository;
+
+    public ReportUsageService(ReportUsageRepository repository) {
+        this.repository = repository;
+    }
+
+    public List<Map<String, Object>> getUsage(String type) {
+        List<ReportUsageTracking> allData = repository.findAll();
+
+        // Get date ranges
+        LocalDate today = LocalDate.now();
+        LocalDate firstDayOfCurrentMonth = today.with(TemporalAdjusters.firstDayOfMonth());
+        LocalDate firstDayOfLastMonth = firstDayOfCurrentMonth.minusMonths(1);
+        LocalDate firstDayOfThreeMonthsAgo = firstDayOfCurrentMonth.minusMonths(3);
+
+        // Filter data using Java Stream
+        List<ReportUsageTracking> filteredData = switch (type.toLowerCase()) {
+            case "last_month" -> allData.stream()
+                    .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfLastMonth) &&
+                                 r.getLastAccessedAt().toLocalDate().isBefore(firstDayOfCurrentMonth))
+                    .collect(Collectors.toList());
+
+            case "current_month" -> allData.stream()
+                    .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfCurrentMonth))
+                    .collect(Collectors.toList());
+
+            case "last_3_months" -> allData.stream()
+                    .filter(r -> r.getLastAccessedAt().toLocalDate().isAfter(firstDayOfThreeMonthsAgo))
+                    .collect(Collectors.toList());
+
+            case "overall" -> allData;  // No filter for overall
+
+            default -> throw new IllegalArgumentException("Invalid type: " + type);
+        };
+
+        // Group by userId and reportId, count occurrences
+        return filteredData.stream()
+                .collect(Collectors.groupingBy(
+                        r -> Map.of("userId", r.getUserId(), "reportId", r.getReportId()),
+                        Collectors.counting()
+                ))
+                .entrySet().stream()
+                .map(entry -> Map.of(
+                        "userId", entry.getKey().get("userId"),
+                        "reportId", entry.getKey().get("reportId"),
+                        "accessCount", entry.getValue()
+                ))
+                .collect(Collectors.toList());
+    }
+}
