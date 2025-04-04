@@ -1,0 +1,141 @@
+<div class="container mt-5">
+  <h2 class="mb-4">FAQ - Video Configuration</h2>
+
+  <!-- Video List Section -->
+  <div class="mb-4">
+    <ul class="list-group">
+      <li *ngFor="let video of videoList" class="list-group-item d-flex justify-content-between align-items-center">
+        {{ video.name }}
+        <span class="badge bg-primary rounded-pill">Uploaded</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Add New Video Button -->
+  <div class="text-end">
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#videoModal">
+      Add New Video
+    </button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+
+        <form [formGroup]="videoForm" (ngSubmit)="uploadVideo()" novalidate>
+
+          <div class="modal-header">
+            <h5 class="modal-title" id="videoModalLabel">Upload New Video</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Video Name -->
+            <div class="mb-3">
+              <label class="form-label">Video Name</label>
+              <input type="text" class="form-control" formControlName="videoName" required>
+              <div class="text-danger" *ngIf="videoForm.get('videoName')?.invalid && videoForm.get('videoName')?.touched">
+                Video name is required.
+              </div>
+            </div>
+
+            <!-- Video File Input -->
+            <div class="mb-3">
+              <label class="form-label">Select Video File</label>
+              <input type="file" class="form-control" (change)="onFileChange($event)">
+              <div class="text-danger" *ngIf="fileError">
+                {{ fileError }}
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div *ngIf="uploadProgress > 0" class="progress mt-3">
+              <div class="progress-bar progress-bar-striped progress-bar-animated"
+                   [style.width.%]="uploadProgress">
+                {{ uploadProgress }}%
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" [disabled]="videoForm.invalid || !selectedFile || isUploading">
+              Upload Video
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html'
+})
+export class AppComponent {
+  videoForm: FormGroup;
+  videoList: { name: string }[] = [];
+  selectedFile: File | null = null;
+  fileError: string = '';
+  uploadProgress: number = 0;
+  isUploading = false;
+
+  constructor(private fb: FormBuilder) {
+    this.videoForm = this.fb.group({
+      videoName: ['', Validators.required]
+    });
+  }
+
+  onFileChange(event: any) {
+    const file = event.target.files[0];
+    this.fileError = '';
+    this.selectedFile = null;
+
+    if (file) {
+      const fileSizeMB = file.size / (1024 * 1024);
+      if (fileSizeMB > 50) {
+        this.fileError = 'File size should not exceed 50 MB';
+      } else {
+        this.selectedFile = file;
+      }
+    }
+  }
+
+  uploadVideo() {
+    if (!this.selectedFile || this.videoForm.invalid) return;
+
+    this.isUploading = true;
+    this.uploadProgress = 0;
+
+    // Simulate upload progress
+    const interval = setInterval(() => {
+      this.uploadProgress += 10;
+      if (this.uploadProgress >= 100) {
+        clearInterval(interval);
+        this.isUploading = false;
+        this.videoList.push({ name: this.videoForm.value.videoName });
+
+        // Reset form and modal
+        this.videoForm.reset();
+        this.selectedFile = null;
+        this.uploadProgress = 0;
+
+        const modal = document.getElementById('videoModal');
+        const bsModal = bootstrap.Modal.getInstance(modal!);
+        bsModal?.hide();
+      }
+    }, 200);
+  }
+}
