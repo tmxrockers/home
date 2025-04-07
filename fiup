@@ -139,3 +139,89 @@ export class AppComponent {
     }, 200);
   }
 }
+
+
+
+
+
+
+<div class="tw-space-y-4">
+  <input type="file" accept="video/*" (change)="onFileSelected($event)" required />
+
+  <div *ngIf="thumbnail">
+    <p class="tw-font-semibold">Video Preview Thumbnail:</p>
+    <img [src]="thumbnail" alt="Video Thumbnail" class="tw-rounded tw-shadow-md tw-w-64" />
+  </div>
+
+  <button class="tw-bg-blue-600 tw-text-white tw-px-4 tw-py-2 tw-rounded" (click)="upload()" [disabled]="!videoFile || !thumbnailBlob">
+    Upload Video & Thumbnail
+  </button>
+
+  <!-- Hidden video and canvas for capture -->
+  <video #videoElement hidden></video>
+  <canvas #canvasElement hidden></canvas>
+</div>
+
+
+
+
+
+
+import { Component, ElementRef, ViewChild } from '@angular/core';
+
+@Component({
+  selector: 'app-video-upload',
+  templateUrl: './video-upload.component.html'
+})
+export class VideoUploadComponent {
+  @ViewChild('videoElement') videoElementRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('canvasElement') canvasElementRef!: ElementRef<HTMLCanvasElement>;
+
+  videoFile!: File;
+  thumbnail!: string; // Base64 to preview
+  thumbnailBlob!: Blob; // For upload
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    this.videoFile = input.files[0];
+    const videoUrl = URL.createObjectURL(this.videoFile);
+
+    const video = this.videoElementRef.nativeElement;
+    video.src = videoUrl;
+    video.load();
+
+    video.onloadedmetadata = () => {
+      // Seek to 1 second
+      video.currentTime = 1;
+    };
+
+    video.onseeked = () => {
+      const canvas = this.canvasElementRef.nativeElement;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            this.thumbnailBlob = blob;
+            this.thumbnail = URL.createObjectURL(blob);
+          }
+        }, 'image/jpeg');
+      }
+    };
+  }
+
+  upload() {
+    const formData = new FormData();
+    formData.append('video', this.videoFile);
+    formData.append('thumbnail', this.thumbnailBlob);
+
+    // Call your backend API here
+    // this.http.post('/api/videos/upload', formData).subscribe(...)
+    console.log("Ready to upload", formData);
+  }
+}
