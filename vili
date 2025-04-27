@@ -1,0 +1,136 @@
+<div class="container mt-4">
+    <div class="row">
+        <!-- Video Player Section -->
+        <div class="col-md-8">
+            <mat-card class="mat-elevation-z8" style="background-color: #1a1a1a; color: #f5f5f5;">
+                <mat-card-header style="background-color: #333333; color: white; padding: 4px;">
+                    <mat-card-title>{{ currentVideoTitle || 'Video Player' }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <video #videoPlayer id="videoPlayer" class="video-js vjs-default-skin w-100" controls preload="auto" style="height: 100%; width: 100%;"></video>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Video List Section -->
+        <div class="col-md-4">
+            <mat-card class="mat-elevation-z8" style="background-color: #333333; color: #f5f5f5;">
+                <mat-card-header style="background-color: #444444; color: white;">
+                    <mat-card-title>Video List</mat-card-title>
+                </mat-card-header>
+                <mat-card-content style="max-height: 500px; overflow-y: auto;">
+                    <mat-list>
+                        <mat-list-item
+                            *ngFor="let video of videoList; let i = index"
+                            [class.active]="currentVideoUrl === video.url"
+                            (click)="playVideo(video.url)"
+                            [attr.tabindex]="0"
+                            [attr.aria-label]="'Play ' + video.title"
+                            style="cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; overflow: hidden; position: relative; z-index: 1; padding: 8px;"
+                            [ngStyle]="{ 'transform': currentVideoUrl === video.url ? 'scale(1.03)' : 'scale(1)', 'box-shadow': currentVideoUrl === video.url ? '0 6px 20px rgba(0, 0, 0, 0.3)' : '0 2px 5px rgba(0, 0, 0, 0.1)' }"
+                        >
+                            <div class="position-relative" style="width: 100%; height: auto;">
+                                <div class="position-absolute top-0 start-0 w-100 text-center" style="color: #f5f5f5; padding: 5px 0; z-index: 2;">
+                                    <h6 
+                                        class="mb-0 text-warning text-truncate" 
+                                        style="background: rgba(0, 0, 0, 0.5); display: inline-block; padding: 2px 8px; border-radius: 3px; max-width: 90%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+                                        [attr.title]="video.title"
+                                    >
+                                        {{ video.title }}
+                                    </h6>
+                                </div>
+                                <img [src]="video.screenShot" alt="{{ video.title }}" class="img-thumbnail" style="width: 100%; height: auto; border-radius: 5px;">
+                                <div class="position-absolute top-50 start-50 translate-middle" style="pointer-events: none; z-index: 2; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                                    <i class="fa fa-play-circle" style="font-size: 3rem; color: white;"></i>
+                                </div>
+                                <div *ngIf="currentVideoUrl === video.url" class="position-absolute bottom-0 end-0 m-2 d-flex align-items-center" style="z-index: 3; background: rgba(0, 0, 0, 0.7); padding: 5px; border-radius: 5px;">
+                                    <i class="fa fa-signal" style="font-size: 1.5rem; color: white; margin-right: 5px;"></i>
+                                    <span class="text-white" style="font-size: 0.9rem;">Playing</span>
+                                </div>
+                                <div class="position-absolute bottom-0 start-0 m-2" style="z-index: 3; background: rgba(0, 0, 0, 0.7); padding: 3px 6px; border-radius: 3px;">
+                                    <span class="text-white" style="font-size: 0.8rem;">{{ video.videoLength }}</span>
+                                </div>
+                            </div>
+                        </mat-list-item>
+                    </mat-list>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>
+
+
+
+import { Component, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { UserGuideService } from './user-guide.service';
+import videojs from 'video.js';
+import { timestamp } from 'rxjs';
+
+@Component({
+  selector: 'app-user-guide',
+  templateUrl: './user-guide.component.html',
+  styleUrls: ['./user-guide.component.scss']
+})
+export class UserGuideComponent implements AfterViewInit {
+
+  @ViewChild('videoPlayer', { static: true }) videoPlayerElement!: ElementRef;
+
+  videoList: any = [];
+  currentVideoUrl: string = '';
+  currentVideoTitle: string = this.videoList[0]?.title || 'Video Player';
+  videoJsPlayer: any;
+
+  constructor(private userGuide: UserGuideService) { }
+  
+  ngOnInit(): void {
+    // You can fetch the video list from a service if needed
+
+    this.userGuide.getApiResponse().subscribe(
+      (response) => { 
+        console.log('API Response:', response);
+        if (response && response.sections) {
+          response.sections[0].items.forEach((item: any) => {
+            this.videoList.push({
+              title: item.title,
+              details: item.details,
+              description: item.description,
+              videoLength: '2:00',
+              screenShot: `https://qqcdnpictest.mxplay.com/${item.titleContentImageInfo[0].url}`,
+              url: `https://d3sgzbosmwirao.cloudfront.net/${item.trailer[0].gifVideoUrl['16x9']}`
+            });
+          });
+
+          this.playVideo(this.videoList[0]?.url);
+        }
+      }
+    );
+  }
+
+  ngAfterViewInit(): void {
+    this.videoJsPlayer = videojs(this.videoPlayerElement.nativeElement, {
+      controls: true,
+      autoplay: false,
+      preload: 'auto',
+      fluid: true
+    });
+
+    this.videoJsPlayer.src({
+      src: this.currentVideoUrl,
+      type: 'video/mp4'
+    });
+  }
+
+  playVideo(url: string): void {
+    const selectedVideo = this.videoList.find((video: any) => video.url === url);
+    this.currentVideoUrl = url;
+    this.currentVideoTitle = selectedVideo ? selectedVideo.title : 'Video Player';
+
+    if (this.videoJsPlayer) {
+      this.videoJsPlayer.src({
+        src: url,
+        type: 'video/mp4'
+      });
+      this.videoJsPlayer.play();
+    }
+  }
+}
