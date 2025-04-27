@@ -726,3 +726,676 @@ export class UserGuideComponent implements AfterViewInit {
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="user-guide-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <h1 class="hero-title">User Guide</h1>
+        <p class="hero-subtitle">Learn how to use our platform with our video tutorials</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Video Player Section -->
+        <div class="video-player-section">
+            <mat-card class="video-player-card mat-elevation-z12">
+                <mat-card-header class="video-player-header">
+                    <mat-card-title>
+                        <i class="fas fa-video video-title-icon"></i>
+                        {{ currentVideoTitle }}
+                    </mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="video-player-content">
+                    <div *ngIf="videoList.length === 0" class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <h3>No Videos Available</h3>
+                        <p>There are currently no tutorial videos available. Please check back later.</p>
+                    </div>
+                    <video *ngIf="videoList.length > 0" 
+                           #videoPlayer 
+                           id="videoPlayer" 
+                           class="video-js vjs-default-skin vjs-big-play-centered" 
+                           controls 
+                           preload="auto"
+                           playsinline>
+                    </video>
+                </mat-card-content>
+            </mat-card>
+        </div>
+
+        <!-- Video List Section -->
+        <div class="video-list-section">
+            <mat-card class="video-list-card mat-elevation-z10">
+                <mat-card-header class="video-list-header">
+                    <mat-card-title>
+                        <i class="fas fa-list-ul video-list-title-icon"></i>
+                        Video List
+                    </mat-card-title>
+                </mat-card-header>
+                <mat-card-content class="video-list-content">
+                    <div *ngIf="videoList.length === 0" class="empty-list-state">
+                        <div class="empty-list-icon">
+                            <i class="fas fa-video-slash"></i>
+                        </div>
+                        <h4>No Videos Found</h4>
+                        <p>There are no tutorial videos available at the moment.</p>
+                    </div>
+                    <mat-list *ngIf="videoList.length > 0">
+                        <mat-list-item
+                            *ngFor="let video of videoList"
+                            [class.active]="currentVideoUrl === video.url"
+                            (click)="playVideo(video.url)"
+                            [attr.tabindex]="0"
+                            [attr.aria-label]="'Play ' + video.title"
+                            class="video-list-item"
+                        >
+                            <div class="video-list-item-inner">
+                                <div class="video-list-thumb-wrapper">
+                                    <img [src]="video.screenShot" alt="{{ video.title }}" class="video-list-thumb" />
+                                    <div class="video-list-play-icon">
+                                        <i class="fas fa-play-circle"></i>
+                                    </div>
+                                    <div *ngIf="currentVideoUrl === video.url" class="video-list-playing-indicator">
+                                        <i class="fas fa-wave-square"></i>
+                                        <span>Playing</span>
+                                    </div>
+                                    <div class="video-list-duration">
+                                        <i class="far fa-clock"></i>
+                                        <span>{{ video.videoLength }}</span>
+                                    </div>
+                                </div>
+                                <div class="video-list-title-group">
+                                    <h6 class="video-list-title" [attr.title]="video.title">{{ video.title }}</h6>
+                                </div>
+                            </div>
+                        </mat-list-item>
+                    </mat-list>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+// User Guide Video Player & List - Bank of America Color Scheme with Font Awesome Icons
+
+// Bank of America Colors
+$boa-navy: #012169;
+$boa-royal: #0033A0;
+$boa-red: #E31837;
+$boa-white: #FFFFFF;
+$boa-light-gray: #F5F5F5;
+$boa-dark-gray: #333333;
+
+.user-guide-container {
+  background: $boa-light-gray;
+  min-height: 100vh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+
+  .hero-section {
+    background: linear-gradient(135deg, $boa-navy, $boa-royal);
+    color: $boa-white;
+    padding: 60px 0;
+    text-align: center;
+    margin-bottom: 40px;
+
+    .hero-title {
+      font-size: 3rem;
+      font-weight: 300;
+      margin-bottom: 16px;
+    }
+
+    .hero-subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  }
+
+  .main-content {
+    flex: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .video-player-card {
+    background: $boa-white;
+    color: $boa-dark-gray;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(1, 33, 105, 0.1);
+    margin-bottom: 24px;
+    overflow: hidden;
+    height: fit-content;
+
+    .video-player-header {
+      background: $boa-light-gray;
+      color: $boa-navy;
+      border-bottom: 1px solid rgba(1, 33, 105, 0.1);
+      padding: 16px 24px;
+
+      .video-title-icon {
+        vertical-align: middle;
+        margin-right: 10px;
+        font-size: 1.8rem;
+        color: $boa-royal;
+      }
+    }
+
+    .video-player-content {
+      padding: 0;
+      background: $boa-dark-gray;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: $boa-white;
+
+        .empty-state-icon {
+          font-size: 4rem;
+          margin-bottom: 20px;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        h3 {
+          font-size: 1.5rem;
+          margin-bottom: 12px;
+          color: $boa-white;
+        }
+
+        p {
+          font-size: 1rem;
+          opacity: 0.8;
+          max-width: 400px;
+          margin: 0 auto;
+        }
+      }
+
+      video {
+        width: 100%;
+        min-height: 400px;
+        background: $boa-dark-gray;
+      }
+    }
+  }
+
+  .video-list-card {
+    background: $boa-white;
+    color: $boa-dark-gray;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(1, 33, 105, 0.1);
+    height: fit-content;
+    position: sticky;
+    top: 24px;
+
+    .video-list-header {
+      background: $boa-light-gray;
+      color: $boa-navy;
+      border-bottom: 1px solid rgba(1, 33, 105, 0.1);
+      padding: 16px 24px;
+
+      .video-list-title-icon {
+        vertical-align: middle;
+        margin-right: 10px;
+        font-size: 1.8rem;
+        color: $boa-royal;
+      }
+    }
+
+    .video-list-content {
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+      padding: 16px;
+
+      .empty-list-state {
+        text-align: center;
+        padding: 40px;
+        color: $boa-dark-gray;
+
+        .empty-list-icon {
+          font-size: 3rem;
+          margin-bottom: 16px;
+          color: rgba(1, 33, 105, 0.3);
+        }
+
+        h4 {
+          font-size: 1.2rem;
+          margin-bottom: 8px;
+          color: $boa-navy;
+        }
+
+        p {
+          font-size: 0.9rem;
+          opacity: 0.8;
+          max-width: 300px;
+          margin: 0 auto;
+        }
+      }
+    }
+  }
+
+  .video-list-item {
+    cursor: pointer;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+    background: $boa-white;
+    border: 1px solid rgba(1, 33, 105, 0.1);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(1, 33, 105, 0.1);
+      border-color: $boa-royal;
+    }
+
+    &.active {
+      background: rgba(1, 33, 105, 0.05);
+      border-color: $boa-royal;
+    }
+
+    .video-list-item-inner {
+      display: flex;
+      align-items: flex-start;
+      width: 100%;
+      padding: 12px;
+    }
+
+    .video-list-thumb-wrapper {
+      position: relative;
+      width: 160px;
+      min-width: 160px;
+      height: 90px;
+      margin-right: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+
+      .video-list-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+
+      .video-list-play-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 2;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+
+        i {
+          font-size: 3.5rem;
+          color: $boa-white;
+          filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        }
+      }
+
+      .video-list-playing-indicator {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: $boa-royal;
+        color: $boa-white;
+        border-radius: 4px;
+        padding: 4px 8px;
+        display: flex;
+        align-items: center;
+        font-size: 0.85rem;
+        z-index: 2;
+
+        i {
+          font-size: 1rem;
+          margin-right: 4px;
+        }
+      }
+
+      .video-list-duration {
+        position: absolute;
+        bottom: 8px;
+        left: 8px;
+        background: rgba(0,0,0,0.7);
+        color: $boa-white;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        z-index: 2;
+
+        i {
+          font-size: 0.9rem;
+          margin-right: 4px;
+        }
+      }
+
+      &:hover {
+        .video-list-play-icon {
+          opacity: 1;
+        }
+
+        .video-list-thumb {
+          transform: scale(1.05);
+        }
+      }
+    }
+
+    .video-list-title-group {
+      flex: 1;
+      min-width: 0;
+      padding: 4px 0;
+
+      .video-list-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: $boa-navy;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1400px) {
+  .user-guide-container {
+    .main-content {
+      max-width: 100%;
+      padding: 0 32px;
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .user-guide-container {
+    .main-content {
+      grid-template-columns: 1fr;
+      max-width: 800px;
+      padding: 0 24px;
+    }
+
+    .video-list-card {
+      position: static;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .user-guide-container {
+    .hero-section {
+      padding: 40px 0;
+
+      .hero-title {
+        font-size: 2.5rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.1rem;
+        padding: 0 24px;
+      }
+    }
+
+    .main-content {
+      padding: 0 16px;
+    }
+
+    .video-player-card {
+      .video-player-content {
+        min-height: 300px;
+
+        .empty-state {
+          padding: 32px;
+
+          .empty-state-icon {
+            font-size: 3rem;
+          }
+
+          h3 {
+            font-size: 1.3rem;
+          }
+        }
+      }
+    }
+
+    .video-list-item {
+      .video-list-thumb-wrapper {
+        width: 140px;
+        min-width: 140px;
+        height: 80px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .user-guide-container {
+    .hero-section {
+      padding: 32px 0;
+
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    .video-player-card {
+      .video-player-content {
+        min-height: 250px;
+
+        .empty-state {
+          padding: 24px;
+
+          .empty-state-icon {
+            font-size: 2.5rem;
+          }
+
+          h3 {
+            font-size: 1.2rem;
+          }
+
+          p {
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+
+    .video-list-item {
+      .video-list-thumb-wrapper {
+        width: 120px;
+        min-width: 120px;
+        height: 68px;
+      }
+
+      .video-list-title-group {
+        .video-list-title {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+import { Component, AfterViewInit, ElementRef, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { UserGuideService } from './user-guide.service';
+import videojs from 'video.js';
+
+@Component({
+  selector: 'app-user-guide',
+  templateUrl: './user-guide.component.html',
+  styleUrls: ['./user-guide.component.scss']
+})
+export class UserGuideComponent implements AfterViewInit, OnDestroy {
+  @ViewChild('videoPlayer', { static: false }) videoPlayerElement!: ElementRef;
+
+  videoList: any[] = [];
+  currentVideoUrl: string = '';
+  currentVideoTitle: string = 'Video Player';
+  videoJsPlayer: any;
+
+  constructor(
+    private userGuideService: UserGuideService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadVideos();
+  }
+
+  ngAfterViewInit(): void {
+    // Intentionally empty because video initialization now happens after data load
+  }
+
+  private loadVideos(): void {
+    this.userGuideService.getApiResponse().subscribe(
+      (response) => {
+        if (response && response.sections) {
+          this.videoList = response.sections[0].items.map((item: any) => ({
+            title: item.title,
+            details: item.details,
+            videoLength: '2:00',
+            screenShot: `https://qqcdnpictest.mxplay.com/${item.titleContentImageInfo[0].url}`,
+            url: `https://d3sgzbosmwirao.cloudfront.net/${item.trailer[0].gifVideoUrl['16x9']}`
+          }));
+
+          if (this.videoList.length > 0) {
+            const firstVideo = this.videoList[0];
+            this.currentVideoUrl = firstVideo.url;
+            this.currentVideoTitle = firstVideo.title;
+
+            // Wait for the videoPlayerElement to render
+            setTimeout(() => {
+              this.initializeVideoPlayer();
+            }, 0);
+          }
+        }
+      },
+      (error) => {
+        console.error('Error loading videos:', error);
+      }
+    );
+  }
+
+  private initializeVideoPlayer(): void {
+    if (this.videoPlayerElement && this.videoPlayerElement.nativeElement) {
+      this.videoJsPlayer = videojs(this.videoPlayerElement.nativeElement, {
+        controls: true,
+        autoplay: false,
+        preload: 'auto',
+        fluid: true,
+        responsive: true,
+        playbackRates: [0.5, 1, 1.5, 2]
+      });
+
+      this.videoJsPlayer.src({
+        src: this.currentVideoUrl,
+        type: 'video/mp4'
+      });
+    }
+  }
+
+  playVideo(url: string): void {
+    const selectedVideo = this.videoList.find((video: any) => video.url === url);
+
+    if (selectedVideo) {
+      this.currentVideoUrl = url;
+      this.currentVideoTitle = selectedVideo.title;
+
+      if (this.videoJsPlayer) {
+        this.videoJsPlayer.src({
+          src: url,
+          type: 'video/mp4'
+        });
+
+        // Only try playing after user click, to avoid autoplay errors
+        this.videoJsPlayer.ready(() => {
+          this.videoJsPlayer.play().catch((error: any) => {
+            console.warn('Autoplay prevented:', error);
+          });
+        });
+      } else {
+        // In rare cases if player not initialized
+        setTimeout(() => {
+          this.initializeVideoPlayer();
+        }, 0);
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.videoJsPlayer) {
+      this.videoJsPlayer.dispose();
+    }
+  }
+}
