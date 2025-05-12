@@ -1,0 +1,19 @@
+Executive Summary: Alteryx Server Upgrade & Workflow Migration Plan
+
+Upgrade Objective: Upgrade the Production Alteryx Server (Prod SS) from version 2021.1 to 2024.1 during the maintenance window from May 15 to May 19. 
+
+Downtime Impact: Prod SS will be fully down during the upgrade, rendering manual and scheduled workflows non-operational, which could affect business continuity. 
+
+Business Continuity Strategy: Temporarily migrate all critical workflows to the Prod Exec server (Alteryx Server 2021.4), managed by the Alteryx support team, to ensure uninterrupted operations. 
+
+Change Management: Coordinate with the Alteryx support team to submit and obtain approval for a Change Request (CRQ) for activities on the Prod Exec server. 
+
+Workflow Migration: Export workflows from Prod SS and import them into Prod Exec, ensuring all associated assets (macros, data connections, credentials) are included. Recreate necessary schedules on Prod Exec to match original timings. 
+
+Upgrade Path: Since direct upgrade from 2021.1 to 2024.1 is not supported, plan intermediate upgrades as necessary. 
+
+Post-Upgrade Validation: After each upgrade step, verify system functionality before proceeding. 
+
+Workflow Repatriation: Post-upgrade, export workflows from Prod Exec and import them back into the upgraded Prod SS server. Re-establish original schedules and validate functionality. 
+
+Post-Migration Activities: Monitor the upgraded Prod SS server for stability and performance. Inform users about the completion of the upgrade and update system documentation accordingly.
