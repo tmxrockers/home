@@ -28,3 +28,28 @@ public class StaffingRequestSpecifications {
         return (root, query, cb) -> root.get("vsrHmPnum").in(pnums);
     }
 }
+
+
+
+
+
+
+
+public Specification<StaffingRequest> buildDynamicSpec(StaffingRequestFilter filter) {
+    Specification<StaffingRequest> spec = Specification.where(
+        StaffingRequestSpecifications.hasStatus(filter.getStatusName(), filter.getStatusCoded())
+    );
+
+    Specification<StaffingRequest> dynamicConditions = null;
+
+    if (filter.getDotCodeGroups() != null && !filter.getDotCodeGroups().isEmpty()) {
+        dynamicConditions = StaffingRequestSpecifications.dotCodeGroupsMatch(filter.getDotCodeGroups());
+    }
+
+    if (filter.getHmPnums() != null && !filter.getHmPnums().isEmpty()) {
+        Specification<StaffingRequest> pnumSpec = StaffingRequestSpecifications.hmPnumIn(filter.getHmPnums());
+        dynamicConditions = (dynamicConditions == null) ? pnumSpec : dynamicConditions.or(pnumSpec);
+    }
+
+    return spec.and(dynamicConditions);
+}
