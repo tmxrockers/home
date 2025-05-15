@@ -1,0 +1,30 @@
+public class StaffingRequestSpecifications {
+
+    public static Specification<StaffingRequest> hasStatus(String name, String coded) {
+        return (root, query, cb) -> cb.and(
+            cb.equal(cb.upper(root.get("vsrOverallStatusName")), name.toUpperCase()),
+            cb.equal(cb.upper(root.get("vsrOverallStatusCoded")), coded.toUpperCase())
+        );
+    }
+
+    public static Specification<StaffingRequest> dotCodeGroupMatches(DotCodeGroup group) {
+        return (root, query, cb) -> cb.and(
+            cb.equal(cb.upper(root.get("vsrDot2Code")), group.getDot2().toUpperCase()),
+            cb.equal(cb.upper(root.get("vsrDot3Code")), group.getDot3().toUpperCase()),
+            cb.equal(cb.upper(root.get("vsrDot4Code")), group.getDot4().toUpperCase())
+        );
+    }
+
+    public static Specification<StaffingRequest> dotCodeGroupsMatch(List<DotCodeGroup> groups) {
+        Specification<StaffingRequest> combined = null;
+        for (DotCodeGroup group : groups) {
+            Specification<StaffingRequest> spec = dotCodeGroupMatches(group);
+            combined = (combined == null) ? spec : combined.or(spec);
+        }
+        return combined;
+    }
+
+    public static Specification<StaffingRequest> hmPnumIn(List<String> pnums) {
+        return (root, query, cb) -> root.get("vsrHmPnum").in(pnums);
+    }
+}
