@@ -1,0 +1,50 @@
+✅ Problem Statement
+
+In the ITCL Open Positions Report (Production), certain records are missing the CIO Group field due to invalid or missing Job Posting Owner email IDs. The CIO Group is retrieved from RDR using the email ID. This missing value causes the ETL workflow to trigger a mandatory field validation error in the Governance UI, as CIO Group is required in GRM.
+
+
+---
+
+📄 Description of the Change
+
+To address this issue, a fallback mechanism will be implemented during the ETL process. In cases where the Job Posting Owner email ID is invalid or not found in RDR, the system will use the SUB LOB Name to populate the CIO Group field. This is based on the assumption that:
+
+SUB LOB Name is always available, as it is mandatory in FG.
+
+Using SUB LOB Name ensures that the CIO Group field is never left blank.
+
+
+This change ensures smoother ETL execution and prevents validation failures in the Governance UI without compromising the integrity of the CIO Group data.
+
+
+---
+
+✅ Acceptance Criteria
+
+1. Email ID Found in RDR:
+
+If the Job Posting Owner email ID is valid and exists in RDR, the CIO Group is populated from RDR as usual.
+
+
+
+2. Email ID Invalid or Missing:
+
+If the Job Posting Owner email ID is invalid or missing in RDR, the CIO Group is populated with the value from SUB LOB Name.
+
+
+
+3. CIO Group Must Not Be Null:
+
+After the ETL run, all records in the ITCL Open Positions Report must have a non-null CIO Group value.
+
+
+
+4. No Validation Errors:
+
+The Governance UI should not raise mandatory field validation errors related to CIO Group post-deployment.
+
+
+
+5. Audit/Logging (if applicable):
+
+The ETL job should log entries where fallback (SUB LOB Name) is used for CIO Group population for traceability.
