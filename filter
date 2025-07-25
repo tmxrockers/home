@@ -1,72 +1,77 @@
+<!-- src/index.html (Ensure these lines are in your project's index.html inside <head> or before </body>) -->
+<!-- Bootstrap CSS CDN -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<!-- Bootstrap JS CDN (Bundle with Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
 <!-- app.component.html -->
-<div class="filter-container p-6 bg-white rounded-lg shadow-md max-w-4xl mx-auto my-8">
-  <h2 class="text-2xl font-semibold mb-6 text-gray-800">Filter(s)</h2>
+<div class="container p-4 bg-white rounded shadow-sm my-4">
+  <h2 class="fs-4 fw-semibold mb-4 text-dark">Filter(s)</h2>
+
+  <!-- "Add Filter" Button - Always visible -->
+  <div class="d-flex justify-content-start mb-4">
+    <button mat-stroked-button color="primary" (click)="toggleFilterInputCard()" class="btn btn-outline-primary rounded-pill px-4 py-2">
+      <mat-icon class="me-2">add</mat-icon> Add Filter
+    </button>
+  </div>
 
   <!-- Applied Filters Display -->
-  <div *ngIf="appliedFilters.length > 0" class="mb-6 flex flex-wrap gap-2 items-center">
-    <mat-chip-row *ngFor="let filter of appliedFilters; let i = index" class="bg-blue-100 text-blue-800 rounded-full px-4 py-2 flex items-center">
-      <mat-icon class="mr-1 text-blue-600">location_on</mat-icon>
+  <div *ngIf="appliedFilters.length > 0" class="mb-4 d-flex flex-wrap gap-2 align-items-center">
+    <mat-chip-row *ngFor="let filter of appliedFilters; let i = index" class="badge bg-info text-dark rounded-pill p-2 d-flex align-items-center">
+      <mat-icon class="me-1 text-primary">location_on</mat-icon>
       <span>{{ filter.category.label }} {{ filter.condition.label }} {{ filter.value }}</span>
-      <button matChipRemove [attr.aria-label]="'Remove ' + filter.category.label" (click)="removeAppliedFilter(i)">
-        <mat-icon class="text-blue-600 ml-1">cancel</mat-icon>
-      </button>
+      <button matChipRemove [attr.aria-label]="'Remove ' + filter.category.label" (click)="removeAppliedFilter(i)" class="btn-close ms-1" style="font-size: 0.75rem;"></button>
     </mat-chip-row>
-    <button mat-button color="warn" (click)="clearAllFilters()" class="ml-4 text-red-600 hover:bg-red-50 rounded-full px-4 py-2">
-      <mat-icon class="mr-1">close</mat-icon> Clear Filters
+    <button mat-button color="warn" (click)="clearAllAppliedFilters()" class="ms-3 text-danger btn btn-link rounded-pill px-3 py-2">
+      <mat-icon class="me-1">close</mat-icon> Clear Filters
     </button>
   </div>
 
-  <!-- Filter Rows -->
-  <div *ngFor="let filterRow of filterRows; let i = index" class="filter-row grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
-    <!-- Category Dropdown -->
-    <mat-form-field appearance="outline" class="w-full">
-      <mat-label>Category</mat-label>
-      <mat-select [(ngModel)]="filterRow.category" name="category{{i}}">
-        <mat-option *ngFor="let category of categories" [value]="category">
-          <mat-icon class="mr-2">{{ category.icon }}</mat-icon>
-          {{ category.label }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+  <!-- Filter Input Card - Conditionally visible -->
+  <div *ngIf="showFilterInputCard" class="filter-input-card border p-4 rounded mb-4">
+    <h3 class="fs-5 fw-semibold mb-3">Add New Filter</h3>
+    <div class="row g-3 mb-3 align-items-end">
+      <!-- Category Dropdown -->
+      <div class="col-12 col-md-4">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Category</mat-label>
+          <mat-select [(ngModel)]="currentFilterRow.category" name="currentCategory">
+            <mat-option *ngFor="let category of categories" [value]="category">
+              <mat-icon class="me-2">{{ category.icon }}</mat-icon>
+              {{ category.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
 
-    <!-- Condition Dropdown -->
-    <mat-form-field appearance="outline" class="w-full">
-      <mat-label>Condition</mat-label>
-      <mat-select [(ngModel)]="filterRow.condition" name="condition{{i}}">
-        <mat-option *ngFor="let condition of conditions" [value]="condition">
-          {{ condition.label }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <!-- Condition Dropdown -->
+      <div class="col-12 col-md-4">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Condition</mat-label>
+          <mat-select [(ngModel)]="currentFilterRow.condition" name="currentCondition">
+            <mat-option *ngFor="let condition of conditions" [value]="condition">
+              {{ condition.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
 
-    <!-- Value Input -->
-    <mat-form-field appearance="outline" class="w-full">
-      <mat-label>Value</mat-label>
-      <input matInput [(ngModel)]="filterRow.value" name="value{{i}}" required>
-    </mat-form-field>
+      <!-- Value Input -->
+      <div class="col-12 col-md-4">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Value</mat-label>
+          <input matInput [(ngModel)]="currentFilterRow.value" name="currentValue" required>
+        </mat-form-field>
+      </div>
+    </div>
 
-    <!-- Remove Button for Filter Row -->
-    <div class="flex justify-end md:justify-start">
-      <button mat-icon-button color="warn" (click)="removeFilterRow(i)" *ngIf="filterRows.length > 1">
-        <mat-icon>delete</mat-icon>
-      </button>
+    <!-- Action Buttons for the filter input card -->
+    <div class="d-flex justify-content-end gap-3 mt-4">
+      <button mat-button (click)="cancelFilterInput()" class="btn btn-light rounded-pill px-4 py-2 text-dark">Cancel</button>
+      <button mat-flat-button color="primary" (click)="applyCurrentFilter()" class="btn btn-primary rounded-pill px-4 py-2">Apply</button>
     </div>
   </div>
-
-  <!-- Add Filter Button -->
-  <div class="flex justify-start mb-6">
-    <button mat-stroked-button color="primary" (click)="addFilterRow()" class="rounded-full px-6 py-3">
-      <mat-icon class="mr-2">add</mat-icon> Add Filter
-    </button>
-  </div>
-
-  <!-- Action Buttons -->
-  <div class="flex justify-end gap-4 mt-6">
-    <button mat-button (click)="resetFilterRows()" class="px-6 py-3 rounded-full text-gray-700 hover:bg-gray-100">Clear</button>
-    <button mat-flat-button color="primary" (click)="applyFilters()" class="px-6 py-3 rounded-full">Apply</button>
-  </div>
 </div>
-
 ```typescript
 // app.component.ts
 import { Component, OnInit } from '@angular/core';
@@ -117,58 +122,71 @@ export class AppComponent implements OnInit {
     { value: 'endsWith', label: 'Ends With' }
   ];
 
-  // Array to hold the current filter rows being edited
-  filterRows: FilterRow[] = [];
+  // Object to hold the current filter row being edited in the card
+  currentFilterRow: FilterRow = {
+    category: null,
+    condition: null,
+    value: ''
+  };
 
   // Array to hold filters that have been applied
   appliedFilters: AppliedFilter[] = [];
 
+  // State to control the visibility of the filter input card
+  showFilterInputCard: boolean = false;
+
   ngOnInit(): void {
-    // Initialize with one empty filter row
-    this.addFilterRow();
+    // Initialize the current filter row with default values
+    this.resetCurrentFilterRow();
   }
 
   /**
-   * Adds a new empty filter row to the filterRows array.
-   * Initializes with default category and condition.
+   * Toggles the visibility of the filter input card.
+   * When opening, it resets the current filter row.
    */
-  addFilterRow(): void {
-    this.filterRows.push({
+  toggleFilterInputCard(): void {
+    this.showFilterInputCard = !this.showFilterInputCard;
+    if (this.showFilterInputCard) {
+      this.resetCurrentFilterRow(); // Reset when opening the card
+    }
+  }
+
+  /**
+   * Applies the current filter from the input card to the appliedFilters array.
+   * Hides the input card after applying.
+   */
+  applyCurrentFilter(): void {
+    if (this.currentFilterRow.category && this.currentFilterRow.condition && this.currentFilterRow.value.trim() !== '') {
+      this.appliedFilters.push({
+        category: this.currentFilterRow.category,
+        condition: this.currentFilterRow.condition,
+        value: this.currentFilterRow.value.trim()
+      });
+      this.showFilterInputCard = false; // Hide the card after applying
+      this.resetCurrentFilterRow(); // Reset for next time it's opened
+    } else {
+      // Optionally, show a validation message to the user
+      console.log('Please fill in all filter fields.');
+    }
+  }
+
+  /**
+   * Resets the current filter row in the input card and hides the card.
+   */
+  cancelFilterInput(): void {
+    this.resetCurrentFilterRow();
+    this.showFilterInputCard = false;
+  }
+
+  /**
+   * Resets the current filter row to its default empty state.
+   */
+  private resetCurrentFilterRow(): void {
+    this.currentFilterRow = {
       category: this.categories[0], // Default to the first category
       condition: this.conditions[0], // Default to the first condition
       value: ''
-    });
-  }
-
-  /**
-   * Removes a filter row at a specific index.
-   * @param index The index of the filter row to remove.
-   */
-  removeFilterRow(index: number): void {
-    this.filterRows.splice(index, 1);
-  }
-
-  /**
-   * Applies the current filter rows to the appliedFilters array.
-   * Only valid filter rows (with category, condition, and value) are applied.
-   */
-  applyFilters(): void {
-    // Clear existing applied filters before applying new ones
-    this.appliedFilters = [];
-
-    this.filterRows.forEach(row => {
-      if (row.category && row.condition && row.value.trim() !== '') {
-        this.appliedFilters.push({
-          category: row.category,
-          condition: row.condition,
-          value: row.value.trim()
-        });
-      }
-    });
-
-    // Optionally, you might want to reset the filterRows after applying
-    // this.resetFilterRows();
-    // Or keep them for further editing
+    };
   }
 
   /**
@@ -180,36 +198,34 @@ export class AppComponent implements OnInit {
   }
 
   /**
-   * Clears all applied filters and resets the filter rows to a single empty row.
+   * Clears all applied filters.
    */
-  clearAllFilters(): void {
+  clearAllAppliedFilters(): void {
     this.appliedFilters = [];
-    this.resetFilterRows();
-  }
-
-  /**
-   * Resets the filter rows to a single empty row with default selections.
-   */
-  resetFilterRows(): void {
-    this.filterRows = [];
-    this.addFilterRow();
+    // Ensure the input card is hidden and reset if it was open
+    this.cancelFilterInput();
   }
 }
-
 ```css
 /* app.component.css */
-/* Tailwind CSS classes are used directly in HTML.
-   This CSS is for any additional custom styles or overrides. */
+/* Custom CSS for Angular Material components to integrate with Bootstrap */
 
-.filter-container {
-  /* No specific styles here as Tailwind handles most of it */
+/* Hides the underline in mat-form-field for all appearances */
+.mat-form-field-underline {
+  display: none !important;
 }
 
-.filter-row {
-  /* Ensures consistent spacing and alignment for filter elements */
+/* Hides the ripple effect on focus for the underline */
+.mat-form-field-ripple {
+  display: none !important;
 }
 
-/* Custom styles for Mat-chip-row to ensure consistent appearance */
+/* Ensure mat-form-field takes full width of its parent column */
+mat-form-field {
+  width: 100%;
+}
+
+/* Custom styling for mat-chip-row to resemble Bootstrap badges more closely */
 mat-chip-row {
   display: inline-flex;
   align-items: center;
@@ -218,63 +234,59 @@ mat-chip-row {
   cursor: default;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  padding: 0 12px;
-  border-radius: 9999px; /* For full rounded corners */
-  height: 32px; /* Standard chip height */
-  font-size: 14px;
-  line-height: 32px;
+  padding: 0.375rem 0.75rem; /* Bootstrap button padding */
+  border-radius: 0.375rem; /* Bootstrap button border-radius */
+  height: auto; /* Allow height to adjust based on content */
+  font-size: 0.875rem; /* Bootstrap font size */
+  line-height: 1.5; /* Bootstrap line height */
   box-sizing: border-box;
 }
 
-mat-chip-row .mat-chip-remove {
-  border: none;
-  background: none;
-  cursor: pointer;
-  outline: none;
-  padding: 0;
-  margin-left: 8px; /* Space between text and close icon */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+/* Adjust mat-icon size within chips for better alignment */
 mat-chip-row .mat-icon {
-  font-size: 18px; /* Adjust icon size if needed */
-  width: 18px;
-  height: 18px;
+  font-size: 1.1rem; /* Slightly larger for visibility */
+  width: 1.1rem;
+  height: 1.1rem;
+  vertical-align: middle; /* Align icon vertically */
 }
 
-/* Ensure form fields take full width within their grid column */
-mat-form-field {
-  width: 100%;
+/* Adjust button close icon for mat-chip-row */
+mat-chip-row .btn-close {
+    width: 0.75rem;
+    height: 0.75rem;
+    background-size: 0.75rem;
+    opacity: 0.75;
 }
 
-/* Basic styling for the root element to center the container */
+/* General host styling for centering and background */
 :host {
   display: flex;
   justify-content: center;
   align-items: flex-start; /* Align to the top, not center vertically */
   min-height: 100vh;
   padding: 20px;
-  background-color: #f0f2f5; /* Light background */
+  background-color: #f8f9fa; /* Bootstrap light background */
   font-family: "Inter", sans-serif; /* Apply Inter font */
 }
-```json
-// app.module.ts (Important: You need to add these imports to your main Angular module)
+```typescript
+// app.module.ts
+// This file is crucial for Angular Material components to work correctly.
+// Please ensure your app.module.ts file contains these imports and declarations.
+
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { FormsModule } from '@angular/forms'; // Required for ngModel
+import { FormsModule } from '@angular/forms'; // <--- IMPORTANT: Required for ngModel
 
 // Angular Material Imports
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';u
+import { MatSelectModule } from '@angular/material/select';underline
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon'; // For icons like location_on, add, delete, cancel
+import { MatIconModule } => '@angular/material/icon'; // <--- IMPORTANT: For icons like location_on, add, delete, cancel
 
-import { AppComponent } from './app.component';
+import { AppComponent } from './app.component'; // Your main component
 
 @NgModule({
   declarations: [
@@ -282,14 +294,14 @@ import { AppComponent } from './app.component';
   ],
   imports: [
     BrowserModule,
-    BrowserAnimationsModule,
-    FormsModule, // Add FormsModule here
+    BrowserAnimationsModule, // <--- IMPORTANT: Required for Angular Material animations
+    FormsModule,             // <--- IMPORTANT: Required for ngModel
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
     MatButtonModule,
     MatChipsModule,
-    MatIconModule // Add MatIconModule here
+    MatIconModule
   ],
   providers: [],
   bootstrap: [AppComponent]
