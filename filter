@@ -1,0 +1,297 @@
+<!-- app.component.html -->
+<div class="filter-container p-6 bg-white rounded-lg shadow-md max-w-4xl mx-auto my-8">
+  <h2 class="text-2xl font-semibold mb-6 text-gray-800">Filter(s)</h2>
+
+  <!-- Applied Filters Display -->
+  <div *ngIf="appliedFilters.length > 0" class="mb-6 flex flex-wrap gap-2 items-center">
+    <mat-chip-row *ngFor="let filter of appliedFilters; let i = index" class="bg-blue-100 text-blue-800 rounded-full px-4 py-2 flex items-center">
+      <mat-icon class="mr-1 text-blue-600">location_on</mat-icon>
+      <span>{{ filter.category.label }} {{ filter.condition.label }} {{ filter.value }}</span>
+      <button matChipRemove [attr.aria-label]="'Remove ' + filter.category.label" (click)="removeAppliedFilter(i)">
+        <mat-icon class="text-blue-600 ml-1">cancel</mat-icon>
+      </button>
+    </mat-chip-row>
+    <button mat-button color="warn" (click)="clearAllFilters()" class="ml-4 text-red-600 hover:bg-red-50 rounded-full px-4 py-2">
+      <mat-icon class="mr-1">close</mat-icon> Clear Filters
+    </button>
+  </div>
+
+  <!-- Filter Rows -->
+  <div *ngFor="let filterRow of filterRows; let i = index" class="filter-row grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 items-end">
+    <!-- Category Dropdown -->
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Category</mat-label>
+      <mat-select [(ngModel)]="filterRow.category" name="category{{i}}">
+        <mat-option *ngFor="let category of categories" [value]="category">
+          <mat-icon class="mr-2">{{ category.icon }}</mat-icon>
+          {{ category.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Condition Dropdown -->
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Condition</mat-label>
+      <mat-select [(ngModel)]="filterRow.condition" name="condition{{i}}">
+        <mat-option *ngFor="let condition of conditions" [value]="condition">
+          {{ condition.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Value Input -->
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Value</mat-label>
+      <input matInput [(ngModel)]="filterRow.value" name="value{{i}}" required>
+    </mat-form-field>
+
+    <!-- Remove Button for Filter Row -->
+    <div class="flex justify-end md:justify-start">
+      <button mat-icon-button color="warn" (click)="removeFilterRow(i)" *ngIf="filterRows.length > 1">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Add Filter Button -->
+  <div class="flex justify-start mb-6">
+    <button mat-stroked-button color="primary" (click)="addFilterRow()" class="rounded-full px-6 py-3">
+      <mat-icon class="mr-2">add</mat-icon> Add Filter
+    </button>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex justify-end gap-4 mt-6">
+    <button mat-button (click)="resetFilterRows()" class="px-6 py-3 rounded-full text-gray-700 hover:bg-gray-100">Clear</button>
+    <button mat-flat-button color="primary" (click)="applyFilters()" class="px-6 py-3 rounded-full">Apply</button>
+  </div>
+</div>
+
+```typescript
+// app.component.ts
+import { Component, OnInit } from '@angular/core';
+
+// Define interfaces for better type safety
+interface FilterCategory {
+  value: string;
+  label: string;
+  icon: string;
+}
+
+interface FilterCondition {
+  value: string;
+  label: string;
+}
+
+interface FilterRow {
+  category: FilterCategory | null;
+  condition: FilterCondition | null;
+  value: string;
+}
+
+interface AppliedFilter {
+  category: FilterCategory;
+  condition: FilterCondition;
+  value: string;
+}
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements OnInit {
+  // Available filter categories
+  categories: FilterCategory[] = [
+    { value: 'address', label: 'Address', icon: 'location_on' },
+    { value: 'name', label: 'Name', icon: 'person' },
+    { value: 'date', label: 'Date', icon: 'calendar_today' },
+    { value: 'status', label: 'Status', icon: 'info' }
+  ];
+
+  // Available filter conditions
+  conditions: FilterCondition[] = [
+    { value: 'contains', label: 'Contains' },
+    { value: 'equals', label: 'Equals' },
+    { value: 'startsWith', label: 'Starts With' },
+    { value: 'endsWith', label: 'Ends With' }
+  ];
+
+  // Array to hold the current filter rows being edited
+  filterRows: FilterRow[] = [];
+
+  // Array to hold filters that have been applied
+  appliedFilters: AppliedFilter[] = [];
+
+  ngOnInit(): void {
+    // Initialize with one empty filter row
+    this.addFilterRow();
+  }
+
+  /**
+   * Adds a new empty filter row to the filterRows array.
+   * Initializes with default category and condition.
+   */
+  addFilterRow(): void {
+    this.filterRows.push({
+      category: this.categories[0], // Default to the first category
+      condition: this.conditions[0], // Default to the first condition
+      value: ''
+    });
+  }
+
+  /**
+   * Removes a filter row at a specific index.
+   * @param index The index of the filter row to remove.
+   */
+  removeFilterRow(index: number): void {
+    this.filterRows.splice(index, 1);
+  }
+
+  /**
+   * Applies the current filter rows to the appliedFilters array.
+   * Only valid filter rows (with category, condition, and value) are applied.
+   */
+  applyFilters(): void {
+    // Clear existing applied filters before applying new ones
+    this.appliedFilters = [];
+
+    this.filterRows.forEach(row => {
+      if (row.category && row.condition && row.value.trim() !== '') {
+        this.appliedFilters.push({
+          category: row.category,
+          condition: row.condition,
+          value: row.value.trim()
+        });
+      }
+    });
+
+    // Optionally, you might want to reset the filterRows after applying
+    // this.resetFilterRows();
+    // Or keep them for further editing
+  }
+
+  /**
+   * Removes a single applied filter chip.
+   * @param index The index of the applied filter to remove.
+   */
+  removeAppliedFilter(index: number): void {
+    this.appliedFilters.splice(index, 1);
+  }
+
+  /**
+   * Clears all applied filters and resets the filter rows to a single empty row.
+   */
+  clearAllFilters(): void {
+    this.appliedFilters = [];
+    this.resetFilterRows();
+  }
+
+  /**
+   * Resets the filter rows to a single empty row with default selections.
+   */
+  resetFilterRows(): void {
+    this.filterRows = [];
+    this.addFilterRow();
+  }
+}
+
+```css
+/* app.component.css */
+/* Tailwind CSS classes are used directly in HTML.
+   This CSS is for any additional custom styles or overrides. */
+
+.filter-container {
+  /* No specific styles here as Tailwind handles most of it */
+}
+
+.filter-row {
+  /* Ensures consistent spacing and alignment for filter elements */
+}
+
+/* Custom styles for Mat-chip-row to ensure consistent appearance */
+mat-chip-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  cursor: default;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0 12px;
+  border-radius: 9999px; /* For full rounded corners */
+  height: 32px; /* Standard chip height */
+  font-size: 14px;
+  line-height: 32px;
+  box-sizing: border-box;
+}
+
+mat-chip-row .mat-chip-remove {
+  border: none;
+  background: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+  margin-left: 8px; /* Space between text and close icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+mat-chip-row .mat-icon {
+  font-size: 18px; /* Adjust icon size if needed */
+  width: 18px;
+  height: 18px;
+}
+
+/* Ensure form fields take full width within their grid column */
+mat-form-field {
+  width: 100%;
+}
+
+/* Basic styling for the root element to center the container */
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align to the top, not center vertically */
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f0f2f5; /* Light background */
+  font-family: "Inter", sans-serif; /* Apply Inter font */
+}
+```json
+// app.module.ts (Important: You need to add these imports to your main Angular module)
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { FormsModule } from '@angular/forms'; // Required for ngModel
+
+// Angular Material Imports
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon'; // For icons like location_on, add, delete, cancel
+
+import { AppComponent } from './app.component';
+
+@NgModule({
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    FormsModule, // Add FormsModule here
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    MatButtonModule,
+    MatChipsModule,
+    MatIconModule // Add MatIconModule here
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
