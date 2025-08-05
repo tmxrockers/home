@@ -1,0 +1,52 @@
+<div class="container-fluid my-4">
+  <div class="row">
+    <div class="col-12">
+      <h2 class="mb-4">Members <span class="badge bg-secondary">{{ members.length }}</span></h2>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    <div class="col" *ngFor="let member of members">
+      <mat-card class="member-card">
+        <mat-card-header>
+          <div mat-card-avatar class="member-avatar" [ngStyle]="{'background-color': getAvatarColor(member.name)}">{{ member.initials }}</div>
+          <mat-card-title>{{ member.name }}</mat-card-title>
+          <mat-card-subtitle>{{ member.email }}</mat-card-subtitle>
+        </mat-card-header>
+        <button mat-icon-button class="link-icon">
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </mat-card>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+// ... (imports and component decorator) ...
+
+export class MemberListComponent {
+  members = [
+    { name: 'Alissia Stone', email: 'a.stone@gmail.com', initials: 'AS' },
+    { name: 'Emma Bern', email: 'e.bern@gmail.com', initials: 'EB' },
+    { name: 'Aaron McFlow', email: 'a.flow@acme.com', initials: 'AM' },
+    // ... more members ...
+  ];
+
+  private avatarColors: string[] = [
+    '#9c27b0', '#2196f3', '#e91e63', '#4caf50', '#ff9800', '#3f51b5', '#ffeb3b', '#009688', '#607d8b', '#795548'
+  ];
+
+  getAvatarColor(name: string): string {
+    // ... (same hash function as above) ...
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % this.avatarColors.length;
+    return this.avatarColors[index];
+  }
+}
