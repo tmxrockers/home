@@ -50,3 +50,95 @@ export class MemberListComponent {
     return this.avatarColors[index];
   }
 }
+
+
+
+
+/* Container for the overall layout */
+.container-fluid {
+  max-width: 1200px;
+}
+
+/* Style for the member count badge */
+.badge {
+  /* Using Bootstrap's badge component with a simple background */
+  background-color: #6c757d;
+  color: white;
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+/* Styling for the Angular Material card */
+.member-card {
+  position: relative;
+  border-radius: 8px;
+  /* Box shadow for a subtle lift effect */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  /* Smooth transition for hover effect */
+  transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+}
+
+/* Hover effect for the card */
+.member-card:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+}
+
+/* Styling for the avatar with dynamic background color */
+.member-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: 500;
+  font-size: 16px;
+  margin-right: 16px;
+}
+
+/* Special case for yellow avatar to ensure text is readable */
+.member-avatar[style*="#ffeb3b"] {
+  color: #333;
+}
+
+/* Styling for the card's header section */
+.mat-card-header {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+}
+
+/* Styling for the card title (member name) */
+.mat-card-header .mat-card-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+/* Styling for the card subtitle (member email) */
+.mat-card-header .mat-card-subtitle {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.2;
+}
+
+/* Positioning and styling for the open_in_new icon button */
+.link-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+/* Hover effect for the icon button */
+.link-icon:hover {
+  color: #333;
+}
