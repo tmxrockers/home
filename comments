@@ -1,0 +1,20 @@
+Hi Liz,
+
+I need your clarification regarding the comments update behavior in the Bench Report.
+
+The report shows the last 30 days of data (updated daily from SP Universal set).
+
+Comments are a multi-select field, and each day’s ETL job carries forward the previous day’s comments.
+
+
+Questions:
+
+1. If a user updates the comments on, say, the 15th day record, should we:
+
+Apply the updated comments only to the 15th day record, or
+
+Cascade the update to all previous days (Day 1–14) and/or subsequent days?
+
+
+
+2. After yesterday’s comments are cascaded to today’s record, if the user later updates yesterday’s record, do we also need to update today’s record to reflect that change?
