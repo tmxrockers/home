@@ -1,0 +1,36 @@
+We recently encountered an issue with the PMMT daily report subscription. The PO had missed renewing the subscription, resulting in old data being processed for approximately one week.
+
+To address this and prevent recurrence, we have worked out three corrective approaches:
+
+Plan 1 – Redeployment Process Documentation
+We have prepared a detailed process document for complete redeployment. This ensures that all jobs, including PMMT, are validated to run successfully with the latest data.
+
+Plan 2 – Access for Production Support Team
+We are planning to extend PMMT subscription access to the Production Support team. This will allow them to directly manage and renew the subscription, reducing dependency on a single role.
+
+Plan 3 – Blocker Validation in PMMT ETL Workflow
+We have implemented a new validation layer within the PMMT ETL workflow. This will automatically check whether the stage table has been refreshed with the latest PMMT data before further processing.
+
+If the validation fails, the workflow will be stopped.
+
+An automated failure notification will be triggered via email, prompting the user to log into GRM and review the validation message.
+
+
+The PMMT workflow now includes the following blocker validations:
+
+1. Data type validation – Ensures all numeric and date fields are valid.
+
+
+2. Mandatory field validation – Ensures Resource ID and Year fields are not null.
+
+
+3. Duplicate data validation – Detects duplicate Resource ID and Year combinations.
+
+
+4. Data refresh validation (newly added) – Ensures the stage table is refreshed daily; otherwise, the workflow halts and raises an alert.
+
+
+
+These corrective measures strengthen our process by adding redundancy, governance, and automated controls to prevent similar incidents in the future.
+
+Please let me know if you would like us to proceed with all three approaches or prioritize any of them.
