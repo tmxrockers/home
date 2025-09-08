@@ -1,0 +1,31 @@
+UPDATE td_sp_bench_report_data t_today
+SET t_today.comments = (
+    SELECT t_yest.comments
+    FROM td_sp_bench_report_data t_yest
+    WHERE t_yest.resource_id = t_today.resource_id
+      AND t_yest.report_date = (
+          SELECT MAX(report_date)
+          FROM td_sp_bench_report_data
+          WHERE report_date < (
+              SELECT MAX(report_date) 
+              FROM td_sp_bench_report_data
+          )
+      )
+)
+WHERE t_today.report_date = (
+    SELECT MAX(report_date) 
+    FROM td_sp_bench_report_data
+)
+AND EXISTS (
+    SELECT 1
+    FROM td_sp_bench_report_data t_yest
+    WHERE t_yest.resource_id = t_today.resource_id
+      AND t_yest.report_date = (
+          SELECT MAX(report_date)
+          FROM td_sp_bench_report_data
+          WHERE report_date < (
+              SELECT MAX(report_date) 
+              FROM td_sp_bench_report_data
+          )
+      )
+);
